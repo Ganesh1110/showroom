@@ -3,21 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Earth Positive — Virtual Flagship</title>
+  <title>Earth Positive — Virtual Flagship Store</title>
+  <meta name="description" content="Step into the Earth Positive Virtual Flagship Store — an immersive 3D retail experience powered by sustainable fashion.">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
 
+<!-- Loading Screen -->
 <div id="loading">
   <div class="loader-ring"></div>
   <div class="loader-brand">EARTH POSITIVE</div>
-  <div class="loader-sub">Flagship Building</div>
+  <div class="loader-sub">Loading Flagship Store</div>
 </div>
 
+<!-- Header HUD -->
 <div id="header">
   <div class="brand">
-    <div class="brand-name">EARTH POSITIVE</div>
-    <div class="brand-sub">Flagship Store</div>
+    <div class="brand-name">Earth Positive</div>
+    <div class="brand-sub">Virtual Flagship Store</div>
   </div>
   <div class="tagline">
     <span class="tag-line">Fashion for the People, the Planet, the Future</span>
@@ -25,11 +28,28 @@
   </div>
 </div>
 
+<!-- Floor info (exterior) -->
 <div id="floor-info">
   <div class="fi-title" id="fiTitle">Earth Positive Flagship</div>
   <div class="fi-desc" id="fiDesc">Explore our luxury collections</div>
 </div>
 
+<!-- Back button (visible when inside) -->
+<button id="back-btn" aria-label="Exit Showroom">
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+    <path d="M8 1L3 6L8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  Exit Showroom
+</button>
+
+<!-- Interior HUD panel -->
+<div id="interior-hud">
+  <div class="interior-floor-name" id="interiorTitle">Grand Lobby</div>
+  <div class="interior-floor-desc" id="interiorDesc">Welcome to the world of Earth Positive</div>
+  <div class="interior-floor-items" id="interiorTags"></div>
+</div>
+
+<!-- Nav Dots (exterior nav) -->
 <div id="nav-dots">
   <button class="dot active" data-idx="0"><span class="dot-label">Overview</span></button>
   <button class="dot" data-idx="1"><span class="dot-label">Lobby</span></button>
@@ -39,7 +59,11 @@
   <button class="dot" data-idx="5"><span class="dot-label">Penthouse</span></button>
 </div>
 
-<div id="hint">DRAG TO EXPLORE · SCROLL TO ZOOM · CLICK DOTS TO NAVIGATE</div>
+<!-- Hint -->
+<div id="hint">Drag to Orbit · Scroll to Zoom · Click Door to Enter</div>
+
+<!-- Transition overlay -->
+<div id="transition-overlay"></div>
 
 <script type="module" src="/src/main.js"></script>
 </body>
