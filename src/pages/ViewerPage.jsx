@@ -3,114 +3,146 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Viewer3D from '../components/viewer/Viewer3D'
 import LoadingScreen from '../components/viewer/LoadingScreen'
 import useStore from '../stores/useStore'
-import { getCategory, getSectionCategories, getFloor, getSection, getCardImage, PRODUCT_INFO } from '../utils/garments'
+import { getCategory, PRODUCT_INFO } from '../utils/garments'
 
-/* ── Color palette for swatches ──────────────────────── */
-const COLOR_SWATCHES = [
-  { color: '#c8c8c8', label: 'White' },
-  { color: '#d4b483', label: 'Sand' },
-  { color: '#8a6545', label: 'Brown' },
-  { color: '#3a7bd5', label: 'Blue' },
-  { color: '#e84393', label: 'Pink' },
-  { color: '#2d2d2d', label: 'Black' },
-  { color: '#6b4f9e', label: 'Purple' },
-  { color: '#2ea86c', label: 'Green' },
+/*─────────────────────────────────────────────
+  Color swatches (video frame 25 — 8 in first row)
+─────────────────────────────────────────────*/
+const COLOR_PALETTE = [
+  { hex: '#3d3527', label: 'Espresso' },
+  { hex: '#e8e4dc', label: 'Cream' },
+  { hex: '#6878e8', label: 'Cobalt' },
+  { hex: '#e03040', label: 'Red' },
+  { hex: '#e84aac', label: 'Pink' },
+  { hex: '#8b5e3c', label: 'Tan' },
+  { hex: '#dfc080', label: 'Sand' },
 ]
 
-const MATERIAL_SWATCHES = [
-  { color: '#f5f5f5', label: 'Cotton', texture: 'cotton' },
-  { color: '#e63946', label: 'Red', texture: 'cotton' },
-  { color: '#f4d03f', label: 'Yellow', texture: 'cotton' },
-  { color: '#27ae60', label: 'Green', texture: 'denim' },
-  { color: '#2980b9', label: 'Blue', texture: 'denim' },
-  { color: '#8e44ad', label: 'Purple', texture: 'velvet' },
-  { color: '#1a1a2e', label: 'Dark', texture: 'leather' },
-  { color: '#7f8c8d', label: 'Grey', texture: 'cotton' },
-  { color: '#9b7653', label: 'Leather', texture: 'leather' },
-  { color: '#4a4a4a', label: 'Charcoal', texture: 'cotton' },
-  { color: '#2c2c2c', label: 'Black', texture: 'velvet' },
+/*─────────────────────────────────────────────
+  Material grid (video frame 25 — second section, 3 rows)
+─────────────────────────────────────────────*/
+const MATERIAL_PALETTE = [
+  { hex: '#f5f5f5', label: 'White', texture: 'cotton' },
+  { hex: '#e03040', label: 'Red', texture: 'cotton' },
+  { hex: '#f4d03f', label: 'Yellow', texture: 'cotton' },
+  { hex: '#27ae60', label: 'Green', texture: 'denim' },
+  { hex: '#2980b9', label: 'Blue', texture: 'denim' },
+  { hex: '#8e44ad', label: 'Purple', texture: 'velvet' },
+  { hex: '#e84aac', label: 'Magenta', texture: 'velvet' },
+  { hex: '#c8a060', label: 'Bronze', texture: 'leather' },
+  { hex: '#8b6040', label: 'Camel', texture: 'leather' },
+  { hex: '#4a4a4a', label: 'Charcoal', texture: 'cotton' },
+  { hex: '#2c2c2c', label: 'Black', texture: 'velvet' },
+  { hex: '#d0d0d0', label: 'Silver', texture: 'cotton' },
 ]
 
-/* ── Customization Panel (drawer from bottom) ──────── */
+/*─────────────────────────────────────────────
+  Customization panel — video frame 25 / 31
+  Shown at bottom-center, not a side drawer
+─────────────────────────────────────────────*/
 function CustomizationPanel({ onClose }) {
-  const { currentColor, currentTexture, setCurrentColor, setCurrentTexture, resetCustomization, selectedCategory } = useStore()
-  const category = getCategory(selectedCategory)
-
-  const availableColors = category?.availableColors || COLOR_SWATCHES.map(s => s.color)
+  const { currentColor, currentTexture, setCurrentColor, setCurrentTexture } = useStore()
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.97 }}
+      initial={{ opacity: 0, y: 32, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 30, scale: 0.97 }}
-      transition={{ duration: 0.28, ease: 'easeOut' }}
+      exit={{ opacity: 0, y: 32, scale: 0.96 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
       className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40"
-      style={{ width: 'min(380px, 90vw)' }}
+      style={{ width: 'min(420px, 90vw)' }}
     >
       <div
-        className="rounded-2xl overflow-hidden shadow-2xl"
+        className="rounded-2xl overflow-hidden"
         style={{
-          background: 'rgba(18, 20, 28, 0.88)',
-          backdropFilter: 'blur(24px)',
+          background: 'rgba(14,16,22,0.88)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
           border: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
         }}
       >
-        {/* Panel header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-white/8">
-          <div className="w-8 h-1 rounded-full bg-white/20 mx-auto" style={{ position: 'absolute', left: '50%', top: 10, transform: 'translateX(-50%)' }} />
-          <p className="text-white/80 text-xs font-semibold uppercase tracking-widest">Customization</p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={resetCustomization}
-              className="text-[10px] text-white/40 hover:text-white/70 transition-colors"
-            >
-              Reset
-            </button>
-            <button
-              onClick={onClose}
-              className="text-white/40 hover:text-white/75 transition-colors"
-              id="customization-close-btn"
-            >
-              <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
-                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </button>
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-1">
+          <div className="w-8 h-1 rounded-full bg-white/20" />
+        </div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pb-3">
+          <p className="text-white/80 text-sm font-semibold tracking-wide">Customization</p>
+          <button
+            onClick={onClose}
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/8 hover:bg-white/15 transition-colors"
+            id="customization-close-btn"
+          >
+            <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3 text-white/70">
+              <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Color row — exactly 7 squares in a row (frame 25) */}
+        <div className="px-5 pb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {COLOR_PALETTE.map(sw => (
+              <button
+                key={sw.hex}
+                title={sw.label}
+                onClick={() => setCurrentColor(sw.hex)}
+                aria-label={sw.label}
+                style={{
+                  width: 40,
+                  height: 40,
+                  backgroundColor: sw.hex,
+                  borderRadius: 8,
+                  border: currentColor === sw.hex
+                    ? '2.5px solid rgba(255,255,255,0.9)'
+                    : '2px solid rgba(255,255,255,0.12)',
+                  boxShadow: currentColor === sw.hex ? '0 0 0 3px rgba(255,255,255,0.25)' : 'none',
+                  transition: 'all 0.15s ease',
+                  transform: currentColor === sw.hex ? 'scale(1.1)' : 'scale(1)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              />
+            ))}
           </div>
         </div>
 
-        <div className="px-5 py-4 space-y-4">
-          {/* Color swatches */}
-          <div>
-            <p className="text-white/40 text-[10px] font-semibold uppercase tracking-widest mb-2.5">Color</p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {COLOR_SWATCHES.map((sw) => (
-                <button
-                  key={sw.color}
-                  title={sw.label}
-                  onClick={() => setCurrentColor(sw.color)}
-                  className={`swatch ${currentColor === sw.color ? 'selected' : ''}`}
-                  style={{ backgroundColor: sw.color, width: 28, height: 28 }}
-                  aria-label={`Color: ${sw.label}`}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Divider + Material label */}
+        <div className="px-5 pb-2">
+          <p className="text-white/40 text-[11px] font-semibold uppercase tracking-widest">Material</p>
+        </div>
 
-          {/* Material swatches */}
-          <div>
-            <p className="text-white/40 text-[10px] font-semibold uppercase tracking-widest mb-2.5">Material</p>
-            <div className="flex items-center gap-2 flex-wrap">
-              {MATERIAL_SWATCHES.map((sw) => (
-                <button
-                  key={`${sw.color}-${sw.label}`}
-                  title={sw.label}
-                  onClick={() => setCurrentTexture(sw.texture)}
-                  className={`swatch ${currentTexture === sw.texture && currentColor === sw.color ? 'selected' : ''}`}
-                  style={{ backgroundColor: sw.color, width: 28, height: 28 }}
-                  aria-label={`Material: ${sw.label}`}
-                />
-              ))}
-            </div>
+        {/* Material grid — matching video (3 rows of 4) */}
+        <div className="px-5 pb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            {MATERIAL_PALETTE.map(sw => (
+              <button
+                key={sw.hex}
+                title={sw.label}
+                onClick={() => {
+                  setCurrentColor(sw.hex)
+                  setCurrentTexture(sw.texture)
+                }}
+                aria-label={sw.label}
+                style={{
+                  width: 38,
+                  height: 38,
+                  backgroundColor: sw.hex,
+                  borderRadius: 8,
+                  border: currentTexture === sw.texture && currentColor === sw.hex
+                    ? '2.5px solid rgba(255,255,255,0.9)'
+                    : '2px solid rgba(255,255,255,0.10)',
+                  boxShadow: currentTexture === sw.texture && currentColor === sw.hex
+                    ? '0 0 0 3px rgba(255,255,255,0.2)' : 'none',
+                  transition: 'all 0.15s ease',
+                  transform: currentTexture === sw.texture && currentColor === sw.hex ? 'scale(1.1)' : 'scale(1)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -118,202 +150,333 @@ function CustomizationPanel({ onClose }) {
   )
 }
 
-/* ── Orbit Ring decoration around garment ─────────── */
-function OrbitRingDecor() {
+/*─────────────────────────────────────────────
+  Orbit ring (animated ellipse around garment)
+─────────────────────────────────────────────*/
+function OrbitRing({ color }) {
   return (
     <div
-      className="absolute pointer-events-none z-5"
+      className="absolute pointer-events-none"
       style={{
         left: '50%',
-        top: '52%',
+        top: '55%',
         transform: 'translate(-50%, -50%)',
-        width: 300,
-        height: 60,
-        perspective: '600px',
+        zIndex: 5,
+        width: '60vmin',
+        height: '12vmin',
+        perspective: '800px',
       }}
     >
+      {/* Outer ellipse ring */}
       <motion.div
-        className="w-full h-full"
-        animate={{ rotateY: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
         style={{
-          border: '1.5px solid rgba(255,255,255,0.18)',
+          width: '100%',
+          height: '100%',
           borderRadius: '50%',
-          transformStyle: 'preserve-3d',
+          border: '1.5px solid rgba(255,255,255,0.30)',
           rotateX: '75deg',
         }}
+        animate={{ rotateZ: [0, 360] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
       />
+      {/* Arrows on ring */}
+      <div
+        className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none"
+        style={{ top: '30%' }}
+      >
+        <div className="text-white/60 text-xl font-light select-none">←</div>
+        <div className="text-white/60 text-xl font-light select-none">→</div>
+      </div>
+      {/* Center dots */}
+      <div
+        className="absolute flex gap-1"
+        style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-white/50" />
+        <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
+      </div>
     </div>
   )
 }
 
-/* ── Floating control pills (left side) ──────────── */
-function FloatingPills({ autoRotate, onToggleRotate }) {
+/*─────────────────────────────────────────────
+  Left sidebar floating pills (video frames 17-25)
+─────────────────────────────────────────────*/
+function LeftSidebar({ autoRotate, onToggleRotate }) {
+  return (
+    <>
+      {/* Vertical zoom slider line */}
+      <motion.div
+        className="absolute left-4 top-1/2 z-30 flex flex-col items-center"
+        style={{ transform: 'translateY(-50%)', height: 140 }}
+        initial={{ opacity: 0, x: -12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        {/* Slider track */}
+        <div
+          className="w-px flex-1 rounded-full"
+          style={{ background: 'rgba(255,255,255,0.18)' }}
+        />
+        {/* Thumb dot */}
+        <div
+          className="absolute w-3 h-3 rounded-full bg-white/90"
+          style={{ top: '25%', left: '50%', transform: 'translate(-50%, -50%)', boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }}
+        />
+      </motion.div>
+
+      {/* Floating pill buttons — left side */}
+      <motion.div
+        className="absolute z-30 flex flex-col gap-2"
+        style={{ left: 40, top: '50%', transform: 'translateY(-50%)' }}
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        {/* Pause/Play toggle — icon pill as in video */}
+        <button
+          onClick={onToggleRotate}
+          id="orbit-toggle-btn"
+          className="viewer-pill"
+          style={autoRotate ? {} : { background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)' }}
+        >
+          <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5">
+            {autoRotate ? (
+              <><rect x="3" y="2.5" width="2.5" height="9" rx="0.8" fill="currentColor" /><rect x="8.5" y="2.5" width="2.5" height="9" rx="0.8" fill="currentColor" /></>
+            ) : (
+              <path d="M4 2.5l7 4.5-7 4.5V2.5z" fill="currentColor" />
+            )}
+          </svg>
+        </button>
+
+        {/* Category name pill (eg. "T-Shirt 🔔") — from video frame 17 */}
+        <div className="viewer-pill gap-1.5" id="category-name-pill">
+          <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5 opacity-60">
+            <path d="M7 1.5C5 1.5 3.5 2.5 3 4H11C10.5 2.5 9 1.5 7 1.5z" stroke="currentColor" strokeWidth="1" fill="none" />
+            <path d="M3 4v7.5a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+          </svg>
+          T-Shirt
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
+/*─────────────────────────────────────────────
+  Right floating pills (video: "Reu Orbit" etc.)
+─────────────────────────────────────────────*/
+function RightPills() {
+  const [orbitLabel, setOrbitLabel] = useState('Reu Orbit')
+
   return (
     <motion.div
-      className="absolute left-6 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-2.5"
-      initial={{ opacity: 0, x: -20 }}
+      className="absolute z-30 flex flex-col gap-2"
+      style={{ right: 20, top: '40%', transform: 'translateY(-50%)' }}
+      initial={{ opacity: 0, x: 16 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.6, duration: 0.5 }}
+      transition={{ delay: 0.65 }}
     >
       <button
-        onClick={onToggleRotate}
-        className={`viewer-pill ${autoRotate ? 'active' : ''}`}
-        id="orbit-pill-btn"
-        title="Toggle orbit"
+        onClick={() => setOrbitLabel(l => l === 'Reu Orbit' ? 'Reset' : 'Reu Orbit')}
+        className="viewer-pill gap-1.5"
+        id="reu-orbit-btn"
       >
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-          <path d="M8 3a5 5 0 014.9 4M8 3V1M8 3v2M3.1 7A5 5 0 008 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-          <path d="M8 13v2M8 13v-2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5">
+          <path d="M7 2a5 5 0 100 10A5 5 0 007 2z" stroke="currentColor" strokeWidth="1.2" fill="none" />
+          <path d="M9.5 7H4.5M7 4.5v5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
         </svg>
-        Orbit
-      </button>
-
-      <button className="viewer-pill" id="rotate-pill-btn">
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-          <path d="M3 8c0-2.76 2.24-5 5-5s5 2.24 5 5M11 6l2 2-2 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Rotate
-      </button>
-
-      <button className="viewer-pill" id="zoom-pill-btn">
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-          <circle cx="7" cy="7" r="4" stroke="currentColor" strokeWidth="1.3" />
-          <path d="M11 11l2.5 2.5M5.5 7H8.5M7 5.5v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        </svg>
-        Zoom
+        {orbitLabel}
       </button>
     </motion.div>
   )
 }
 
-/* ── Left vertical zoom slider ───────────────────── */
-function ZoomSlider() {
-  const { viewerZoom, setViewerZoom } = useStore()
-  // Slider shows inverted (bottom = zoomed in = small distance value)
-  const sliderVal = 6 - viewerZoom  // invert so slider top = zoom in
-
-  return (
-    <motion.div
-      className="absolute left-6 bottom-24 z-30 flex flex-col items-center gap-2"
-      initial={{ opacity: 0, x: -16 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.7, duration: 0.5 }}
-    >
-      <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3 text-white/40">
-        <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-      <input
-        type="range"
-        min={0}
-        max={3.5}
-        step={0.05}
-        value={sliderVal}
-        onChange={(e) => setViewerZoom(6 - parseFloat(e.target.value))}
-        className="zoom-slider"
-        aria-label="Zoom level"
-        id="zoom-slider"
-      />
-      <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3 text-white/40">
-        <path d="M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    </motion.div>
-  )
-}
-
-/* ── Bottom dot navigator ─────────────────────────── */
-function BottomNav({ categoryList, selectedCategory }) {
-  const { prevCategory, nextCategory } = useStore()
+/*─────────────────────────────────────────────
+  Bottom bar: ← ↓ slider → (video frames 17-31)
+─────────────────────────────────────────────*/
+function BottomBar({ selectedCategory, categoryList }) {
+  const { prevCategory, nextCategory, toggleCustomization, showCustomization } = useStore()
   const currentIdx = categoryList.indexOf(selectedCategory)
 
-  // Nothing to page between if this section only has one item
-  if (categoryList.length <= 1) return null
-
   return (
     <motion.div
-      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4"
+      className="absolute bottom-0 left-0 right-0 z-30 flex items-center justify-between px-5 py-5"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6, duration: 0.5 }}
+      transition={{ delay: 0.55 }}
     >
+      {/* Left: Enter Showroom */}
       <button
-        onClick={prevCategory}
-        className="viewer-pill px-3"
-        id="prev-category-btn"
-        aria-label="Previous category"
+        onClick={() => useStore.getState().backToShowroom()}
+        className="flex items-center gap-2 viewer-pill"
+        id="enter-showroom-btn"
       >
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-          <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5">
+          <rect x="2" y="2" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M5 7h4M7 5l2 2-2 2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
+        Enter Showroom
       </button>
 
-      {/* Dot indicators */}
-      <div className="flex items-center gap-1.5">
-        {categoryList.map((_, i) => (
+      {/* Center: ← ↓ slider indicator → */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={prevCategory}
+          className="w-7 h-7 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+          id="viewer-prev-btn"
+        >
+          <svg viewBox="0 0 12 12" fill="none" className="w-4 h-4">
+            <path d="M8 3L5 6l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        {/* Slider track + down chevron */}
+        <button
+          onClick={toggleCustomization}
+          className="flex items-center gap-2"
+          id="customize-toggle-btn"
+          aria-label="Open customization"
+        >
           <div
-            key={i}
-            className={`nav-dot ${i === currentIdx ? 'active' : ''}`}
-          />
-        ))}
+            className="flex items-center gap-1"
+            style={{ width: 100, position: 'relative' }}
+          >
+            {/* Track */}
+            <div className="w-full h-px bg-white/25 rounded-full" />
+            {/* Current position thumb */}
+            <div
+              className="absolute w-1 h-3 rounded-sm bg-white/70"
+              style={{
+                left: `${((currentIdx) / Math.max(categoryList.length - 1, 1)) * 100}%`,
+                transform: 'translateX(-50%)',
+              }}
+            />
+          </div>
+          {/* Chevron down (opens customization) */}
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{
+              background: 'rgba(255,255,255,0.10)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+            }}
+          >
+            <svg viewBox="0 0 12 12" fill="none" className="w-3.5 h-3.5 text-white/75">
+              <path d="M3 4.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </button>
+
+        <button
+          onClick={nextCategory}
+          className="w-7 h-7 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+          id="viewer-next-btn"
+        >
+          <svg viewBox="0 0 12 12" fill="none" className="w-4 h-4">
+            <path d="M4 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
 
+      {/* Right: Grid/customize button */}
       <button
-        onClick={nextCategory}
-        className="viewer-pill px-3"
-        id="next-category-btn"
-        aria-label="Next category"
+        onClick={toggleCustomization}
+        className="w-10 h-10 rounded-full flex items-center justify-center"
+        style={{
+          background: showCustomization ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }}
+        id="grid-customize-btn"
       >
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <svg viewBox="0 0 14 14" fill="none" className="w-4 h-4 text-white/80">
+          <rect x="2" y="2" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="8" y="2" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="2" y="8" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+          <rect x="8" y="8" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
         </svg>
       </button>
     </motion.div>
   )
 }
 
-/* ── Current color thumbnail preview ─────────────── */
-function GarmentThumbnail({ categoryId }) {
-  const src = getCardImage(categoryId)
-  if (!src) return null
+/*─────────────────────────────────────────────
+  Floating badges near the garment (video frames 17-21)
+  These are small labels that float around the garment
+─────────────────────────────────────────────*/
+function FloatingBadges({ categoryId }) {
+  const info = PRODUCT_INFO[categoryId]
+  if (!info) return null
 
   return (
-    <motion.div
-      className="absolute top-16 right-5 z-30 rounded-xl overflow-hidden shadow-xl"
-      style={{
-        width: 56,
-        height: 68,
-        border: '1px solid rgba(255,255,255,0.15)',
-        background: 'rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(10px)',
-      }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: 0.8, duration: 0.4 }}
-    >
-      <img src={src} alt="Current garment" className="w-full h-full object-contain p-1" />
-    </motion.div>
+    <>
+      {/* Bottom left cursive brand */}
+      <motion.div
+        className="absolute pointer-events-none z-20"
+        style={{ bottom: '16%', left: '8%' }}
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.9 }}
+      >
+        <p className="font-caveat text-white/20 text-2xl font-bold leading-tight">Clothing</p>
+        <p className="font-caveat text-white/20 text-2xl font-bold leading-tight -mt-1">Mockups</p>
+        <p className="font-caveat text-white/12 text-xs">™ 3D</p>
+      </motion.div>
+
+      {/* Bottom right price */}
+      <motion.div
+        className="absolute pointer-events-none z-20 text-right"
+        style={{ bottom: '16%', right: '6%' }}
+        initial={{ opacity: 0, x: 16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.0 }}
+      >
+        <p className="text-white/20 text-xs uppercase tracking-wider">Starting at</p>
+        <p className="text-white/30 text-3xl font-bold">{info.price}</p>
+      </motion.div>
+
+      {/* Small floating annotation pills (like video bottom "Accessories" pill) */}
+      <motion.div
+        className="absolute z-20"
+        style={{ bottom: '32%', left: '50%', transform: 'translateX(-50%)' }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: [0, -4, 0] }}
+        transition={{ delay: 1.1, y: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }}
+      >
+        <div
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold"
+          style={{
+            background: 'rgba(8,10,18,0.75)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+          }}
+        >
+          <svg viewBox="0 0 12 12" fill="none" className="w-3 h-3 opacity-60">
+            <path d="M6 1a5 5 0 100 10A5 5 0 006 1z" stroke="currentColor" strokeWidth="1.1" fill="none" />
+          </svg>
+          {info.name.split(' ').slice(0, 2).join(' ')}
+        </div>
+      </motion.div>
+    </>
   )
 }
 
-/* ── Main ViewerPage ─────────────────────────────── */
+/*─────────────────────────────────────────────
+  Main ViewerPage
+─────────────────────────────────────────────*/
 export default function ViewerPage() {
   const {
     selectedCategory,
     autoRotate,
     setAutoRotate,
-    backToShowroom,
     showCustomization,
     toggleCustomization,
-    currentFloorId,
-    currentSectionId,
+    categoryList,
+    currentColor,
   } = useStore()
+
   const category = getCategory(selectedCategory)
   const info = PRODUCT_INFO[selectedCategory]
-  const [menuOpen, setMenuOpen] = useState(false)
-
-  const floor = getFloor(currentFloorId)
-  const section = getSection(currentFloorId, currentSectionId)
-  const categoryList = getSectionCategories(currentFloorId, currentSectionId).map((c) => c.id)
 
   return (
     <motion.div
@@ -325,8 +488,8 @@ export default function ViewerPage() {
     >
       <LoadingScreen />
 
-      {/* Studio vignette overlay */}
-      <div className="absolute inset-0 studio-vignette pointer-events-none z-10" />
+      {/* Studio vignette */}
+      <div className="absolute inset-0 studio-vignette pointer-events-none z-5" />
 
       {/* ── 3D Canvas ── */}
       <div className="absolute inset-0 z-0">
@@ -334,229 +497,139 @@ export default function ViewerPage() {
       </div>
 
       {/* Orbit ring decoration */}
-      <OrbitRingDecor />
+      <OrbitRing color={currentColor} />
 
-      {/* ══════════════════════════════════
-          TOP BAR: Hamburger + "Customization" label
-          + Thumbnail + Add to Store + Grid icon
-      ══════════════════════════════════ */}
+      {/* Floating badges near garment */}
+      <FloatingBadges categoryId={selectedCategory} />
+
+      {/* ══════════════════
+          TOP BAR: ≡ Customization | Addt Shore | ⊞
+      ══════════════════ */}
       <motion.div
-        className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-5 py-4"
-        initial={{ opacity: 0, y: -20 }}
+        className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3.5"
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
+        transition={{ delay: 0.35 }}
       >
-        {/* Left: hamburger + title */}
+        {/* Left: hamburger + Customization label */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setMenuOpen((v) => !v)}
             className="viewer-pill !px-2.5 !py-2"
-            id="viewer-menu-btn"
-            aria-label="Menu"
+            id="viewer-hamburger-btn"
+            onClick={() => useStore.getState().backToShowroom()}
           >
-            <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4">
-              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
+              <path d="M3 5h10M3 8h10M3 11h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
           <span className="text-white/75 text-sm font-semibold tracking-wide">Customization</span>
-
-          {/* Floor / section / category breadcrumb */}
-          {category && (
-            <div className="hidden sm:flex items-center gap-1.5 ml-1">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: category.color }} />
-              <span className="text-[10px] font-medium text-white/45 uppercase tracking-widest">
-                {floor?.name}{section ? ` · ${section.name}` : ''} · {category.name}
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Right: Add to Store + Grid */}
+        {/* Right: "Addt Shore" + grid */}
         <div className="flex items-center gap-2">
           <button
             className="viewer-pill gap-1.5"
-            id="add-to-store-btn"
+            id="addt-shore-btn"
           >
-            <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-              <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.3" />
-              <path d="M8 5.5v5M5.5 8h5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5">
+              <circle cx="5" cy="5" r="3" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M10 7a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" strokeWidth="1.2" />
+              <path d="M7.5 5.5L9 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
-            Add to Store
+            Addt Shore
           </button>
+
           <button
             className="viewer-pill !px-2.5 !py-2"
             id="viewer-grid-btn"
+            onClick={toggleCustomization}
           >
-            <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
-              <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-              <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-              <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
-              <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+            <svg viewBox="0 0 14 14" fill="none" className="w-4 h-4">
+              <rect x="2" y="2" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+              <rect x="8" y="2" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+              <rect x="2" y="8" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
+              <rect x="8" y="8" width="4" height="4" rx="0.8" stroke="currentColor" strokeWidth="1.2" />
             </svg>
           </button>
         </div>
       </motion.div>
 
-      {/* Garment thumbnail (top-right, below header) */}
-      <GarmentThumbnail categoryId={selectedCategory} />
-
-      {/* ══════════════════════════════════
-          LEFT: Floating control pills + zoom slider
-      ══════════════════════════════════ */}
-      <FloatingPills autoRotate={autoRotate} onToggleRotate={() => setAutoRotate(!autoRotate)} />
-      <ZoomSlider />
-
-      {/* ══════════════════════════════════
-          LEFT/RIGHT NAV ARROWS
-      ══════════════════════════════════ */}
-      <motion.button
-        className="absolute left-16 top-1/2 -translate-y-1/2 z-30 viewer-pill !px-3 !py-3"
-        onClick={() => useStore.getState().prevCategory()}
-        id="viewer-prev-btn"
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
-      >
-        <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
-          <path d="M10 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </motion.button>
-
-      <motion.button
-        className="absolute right-5 top-1/2 -translate-y-1/2 z-30 viewer-pill !px-3 !py-3"
-        onClick={() => useStore.getState().nextCategory()}
-        id="viewer-next-btn"
-        initial={{ opacity: 0, x: 10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.7, duration: 0.4 }}
-      >
-        <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
-          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </motion.button>
-
-      {/* ══════════════════════════════════
-          BOTTOM-LEFT: Enter Showroom button
-      ══════════════════════════════════ */}
-      <motion.button
-        onClick={backToShowroom}
-        className="absolute bottom-6 left-5 z-30 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold text-white/70 transition-all duration-200 hover:text-white"
-        style={{
-          background: 'rgba(255,255,255,0.07)',
-          backdropFilter: 'blur(14px)',
-          border: '1px solid rgba(255,255,255,0.13)',
-        }}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        id="back-to-showroom-btn"
-      >
-        <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-          <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Enter Showroom
-      </motion.button>
-
-      {/* ══════════════════════════════════
-          BOTTOM CENTER: Dot nav + arrows
-      ══════════════════════════════════ */}
-      <BottomNav categoryList={categoryList} selectedCategory={selectedCategory} />
-
-      {/* ══════════════════════════════════
-          BOTTOM RIGHT: Customize button + sparkle
-      ══════════════════════════════════ */}
+      {/* ══════════════════
+          GARMENT NAME — top center
+      ══════════════════ */}
       <motion.div
-        className="absolute bottom-6 right-5 z-30 flex flex-col items-end gap-3"
-        initial={{ opacity: 0, y: 16 }}
+        className="absolute top-16 left-0 right-0 flex flex-col items-center pointer-events-none z-20"
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
+        transition={{ delay: 0.5 }}
       >
-        {/* Sparkle decoration */}
-        <div className="sparkle opacity-70">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z"
-              fill="rgba(220,190,100,0.7)" />
-          </svg>
-        </div>
-
-        {/* Customize toggle */}
-        <button
-          onClick={toggleCustomization}
-          className="viewer-pill !px-4 !py-2.5"
-          style={showCustomization ? {
-            background: 'rgba(99,102,241,0.25)',
-            borderColor: 'rgba(99,102,241,0.5)',
-            color: '#a5b4fc',
-          } : {}}
-          id="customize-toggle-btn"
-        >
-          <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
-            <circle cx="5" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
-            <circle cx="11" cy="4" r="2" stroke="currentColor" strokeWidth="1.3" />
-            <circle cx="11" cy="12" r="2" stroke="currentColor" strokeWidth="1.3" />
-            <path d="M7 8h7M2 8H3M11 6V2M11 14v-2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          </svg>
-          {showCustomization ? 'Close' : 'Customize'}
-        </button>
+        <p className="text-white/25 text-[9px] font-semibold tracking-[0.4em] uppercase">3D MODEL</p>
+        <h1 className="text-white/55 text-3xl sm:text-4xl font-light tracking-wide font-serif mt-0.5">
+          {info?.name || category?.name}
+        </h1>
       </motion.div>
 
-      {/* ══════════════════════════════════
+      {/* ══════════════════
+          LEFT: Sidebar (zoom slider + pills)
+      ══════════════════ */}
+      <LeftSidebar autoRotate={autoRotate} onToggleRotate={() => setAutoRotate(!autoRotate)} />
+
+      {/* ══════════════════
+          RIGHT: Arrow + pill
+      ══════════════════ */}
+      <RightPills />
+
+      {/* Outer left/right large arrows */}
+      <motion.button
+        className="absolute left-3 top-1/2 z-30 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center viewer-pill !px-0"
+        onClick={() => useStore.getState().prevCategory()}
+        id="viewer-left-arrow"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <svg viewBox="0 0 14 14" fill="none" className="w-4 h-4">
+          <path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </motion.button>
+
+      <motion.button
+        className="absolute right-3 top-1/2 z-30 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center viewer-pill !px-0"
+        onClick={() => useStore.getState().nextCategory()}
+        id="viewer-right-arrow"
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <svg viewBox="0 0 14 14" fill="none" className="w-4 h-4">
+          <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </motion.button>
+
+      {/* Bottom-right sparkle */}
+      <div
+        className="absolute bottom-20 right-6 z-20 pointer-events-none"
+        style={{ animation: 'sparkle-twinkle 3s ease-in-out infinite' }}
+      >
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z"
+            fill="rgba(255,255,255,0.5)" />
+        </svg>
+      </div>
+
+      {/* ══════════════════
+          BOTTOM BAR
+      ══════════════════ */}
+      <BottomBar selectedCategory={selectedCategory} categoryList={categoryList} />
+
+      {/* ══════════════════
           CUSTOMIZATION PANEL
-      ══════════════════════════════════ */}
+      ══════════════════ */}
       <AnimatePresence>
         {showCustomization && (
           <CustomizationPanel onClose={toggleCustomization} />
         )}
       </AnimatePresence>
-
-      {/* ══════════════════════════════════
-          TOP CENTER: Garment name
-      ══════════════════════════════════ */}
-      <motion.div
-        className="absolute top-16 left-0 right-0 z-20 flex flex-col items-center pointer-events-none"
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-      >
-        <p className="text-white/30 text-[10px] font-semibold tracking-[0.35em] uppercase mb-0.5">
-          3D MODEL
-        </p>
-        <h1 className="text-white/65 text-2xl sm:text-3xl font-light tracking-wide font-serif">
-          {info?.name || category?.name || 'Garment'}
-        </h1>
-      </motion.div>
-
-      {/* ══════════════════════════════════
-          BOTTOM-LEFT cursive branding
-      ══════════════════════════════════ */}
-      <motion.div
-        className="absolute bottom-20 left-20 z-20 pointer-events-none"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.8, duration: 0.6 }}
-      >
-        <p className="font-caveat text-2xl sm:text-3xl text-white/25 leading-tight font-bold">
-          Clothing
-        </p>
-        <p className="font-caveat text-2xl sm:text-3xl text-white/25 leading-tight font-bold -mt-1">
-          Mockups
-        </p>
-        <p className="font-caveat text-xs text-white/15 tracking-wide mt-0.5">™ 3D</p>
-      </motion.div>
-
-      {/* Drag/scroll hint (bottom right corner) */}
-      {info && (
-        <motion.div
-          className="absolute bottom-20 right-5 z-20 text-right pointer-events-none"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 0.6 }}
-        >
-          <p className="text-[9px] text-white/25 uppercase tracking-wider font-medium">Starting at</p>
-          <p className="text-2xl font-bold text-white/50">{info.price}</p>
-          <p className="text-[9px] text-white/20 mt-0.5">Drag · Scroll to zoom</p>
-        </motion.div>
-      )}
     </motion.div>
   )
 }
