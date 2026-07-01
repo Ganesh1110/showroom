@@ -513,6 +513,9 @@ function makeClothingRack(x, y, z, rotY, colors = [0x222222, 0x993333, 0x334499,
   return g;
 }
 
+const mannequinTorsos = [];
+const mannequinHeads = [];
+
 function makeMannequin(x, y, z, rotY, garmentColor = 0x222222) {
   const g = new THREE.Group();
   g.position.set(x, y, z);
@@ -526,6 +529,11 @@ function makeMannequin(x, y, z, rotY, garmentColor = 0x222222) {
   torso.position.y = 0.88; g.add(torso);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 12), MAT.concDark);
   head.position.y = 1.18; g.add(head);
+
+  // Store for animation
+  mannequinTorsos.push(torso);
+  mannequinHeads.push(head);
+
   return g;
 }
 
@@ -1001,35 +1009,42 @@ lobbyHotspots.add(makePropHotspot('Tomo Koizumi Gown', 'Fluffy ruffled rainbow d
 lobbyHotspots.add(makePropHotspot('Hirume Bonsai', 'Traditional Japanese Bonsai tree representing natural beauty.', -2.8, 0.7, -0.4));
 lobbyHotspots.add(makePropHotspot('Rod Chandelier', 'Contemporary vertical tube rod chandelier with glow bloom.', 0, 2.3, 0));
 
-// ── Hotspot generator functions ──
-function makePropHotspot(name, desc, x, y, z) {
-  const container = document.createElement('div');
-  container.style.position = 'relative';
+// ── Hotspot database & generator functions ──
+const PROP_DATABASE = {
+  'Tomo Koizumi Gown': { price: '$1,250.00', icon: '👗', desc: 'A gorgeous ruffled rainbow gown hand-layered with fine sustainable colored tulle.' },
+  'Hirume Bonsai': { price: '$350.00', icon: '🪴', desc: 'Traditional Japanese Bonsai tree representing natural beauty and ethical balance.' },
+  'Rod Chandelier': { price: '$850.00', icon: '💡', desc: 'Modern glowing steel rod tube chandelier that reacts to post-processing bloom.' },
+  'Lounge Sofa': { price: '$1,400.00', icon: '🛋️', desc: 'Minimalist designer fabric sofa set with a white marble top coffee table.' },
+  'Organic Tees': { price: '$45.00', icon: '👕', desc: 'Classic graphic T-shirt collection made from organic, climate-neutral cotton.' },
+  'Organizer Stand': { price: '$180.00', icon: '🎒', desc: 'Black steel organizer shelf displaying backpacks, shoes, and canvas tote bags.' },
+  'Organic Hoodies': { price: '$95.00', icon: '🧥', desc: 'Heavyweight organic cotton hoodies and jackets with a comfortable relaxed fit.' },
+  'Accessories Collection': { price: '$65.00', icon: '🧢', desc: 'Premium sustainable baseball caps, tote bags, and everyday accessories.' }
+};
 
+function makePropHotspot(name, desc, x, y, z) {
   const btn = document.createElement('button');
   btn.className = 'prop-hotspot-btn';
   btn.textContent = '+';
 
-  const popup = document.createElement('div');
-  popup.className = 'prop-hotspot-popup';
-  popup.innerHTML = `<strong>${name}</strong><br/>${desc}`;
-
-  btn.appendChild(popup);
-  container.appendChild(btn);
-
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isActive = btn.classList.contains('active');
+    
     document.querySelectorAll('.prop-hotspot-btn').forEach(b => b.classList.remove('active'));
-    if (!isActive) btn.classList.add('active');
+    btn.classList.add('active');
+
+    const details = PROP_DATABASE[name] || { price: '$0.00', icon: '🏷️', desc: desc };
+
+    document.getElementById('prod-title').textContent = name;
+    document.getElementById('prod-price').textContent = details.price;
+    document.getElementById('prod-desc').textContent = details.desc;
+    document.querySelector('.product-panel-icon').textContent = details.icon;
+
+    const panel = document.getElementById('product-panel');
+    panel.classList.remove('product-panel-hidden');
   });
 
-  document.addEventListener('click', () => {
-    btn.classList.remove('active');
-  });
-
-  container.style.display = 'none';
-  const obj = new CSS2DObject(container);
+  btn.style.display = 'none';
+  const obj = new CSS2DObject(btn);
   obj.position.set(x, y, z);
   return obj;
 }
@@ -1620,8 +1635,14 @@ function enterBuilding() {
       navDots.style.display = 'none';
       hintEl.textContent = 'Drag to explore · Scroll to zoom · ← → to change floors';
       backBtn.classList.add('visible');
+      const dn = document.getElementById('daynight-toggle');
+      if (dn) dn.classList.add('visible');
       interiorHUD.classList.add('visible');
       floorInfoEl.classList.remove('visible');
+      
+      // Trigger tutorial overlay
+      if (typeof showOnboardingTutorial === 'function') showOnboardingTutorial();
+      
       animating = false;
     }
   });
@@ -1668,6 +1689,8 @@ function exitBuilding() {
       navDots.style.display = 'flex';
       hintEl.textContent = 'Drag to Orbit · Scroll to Zoom · Click Door to Enter';
       backBtn.classList.remove('visible');
+      const dn = document.getElementById('daynight-toggle');
+      if (dn) dn.classList.remove('visible');
       interiorHUD.classList.remove('visible');
 
       // Hide all interior hotspots in exterior view
@@ -1901,11 +1924,26 @@ function animate() {
     lt.intensity = 1.4 + Math.sin(t * 0.4 + i * 1.2) * 0.12;
   });
 
+  // Mannequins idle breathing/head drift
+  if (typeof mannequinHeads !== 'undefined') {
+    mannequinHeads.forEach((head, i) => {
+      head.rotation.y = Math.sin(t * 0.4 + i * 2.0) * 0.08;
+    });
+  }
+  if (typeof mannequinTorsos !== 'undefined') {
+    mannequinTorsos.forEach((torso, i) => {
+      torso.position.y = 0.88 + Math.sin(t * 0.8 + i * 1.5) * 0.012;
+    });
+  }
+
   // Animate custom lobby shaders and meshes
   if (typeof screenShaderMat !== 'undefined') screenShaderMat.uniforms.uTime.value = t;
   if (typeof skyMat !== 'undefined') skyMat.uniforms.uTime.value = t;
   if (typeof lobbyParticleMat !== 'undefined') lobbyParticleMat.uniforms.uTime.value = t;
   if (typeof chandelierGroup !== 'undefined') chandelierGroup.rotation.y = t * 0.12;
+
+  // Interactivity Raycast hover glow
+  checkRaycast();
 
   controls.update();
   
@@ -1928,25 +1966,418 @@ window.addEventListener('resize', () => {
 });
 
 // ─────────────────────────────────────────────────
-//  BOOT — fade loading screen & intro animation
+//  INTERACTIVE HOVER GLOW (Raycasting)
 // ─────────────────────────────────────────────────
-setTimeout(() => {
-  document.getElementById('loading').classList.add('hidden');
-  floorInfoEl.classList.add('visible');
-  fiTitle.textContent = 'Earth Positive Flagship';
-  fiDesc.textContent = 'Explore our luxury collections';
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredObject = null;
 
-  // Cinematic intro pan
-  gsap.from(camera.position, {
-    z: 50, y: 24,
-    duration: 2.8,
-    ease: 'power4.out',
+window.addEventListener('pointermove', (event) => {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+});
+
+function checkRaycast() {
+  if (!isInside || animating) {
+    document.body.style.cursor = 'default';
+    return;
+  }
+  raycaster.setFromCamera(mouse, camera);
+
+  // Cast ray against building props
+  const intersects = raycaster.intersectObjects(building.children, true);
+  let found = null;
+  for (let i = 0; i < intersects.length; i++) {
+    const obj = intersects[i].object;
+    // Highlight clothing racks, trees, dress, mirror, sofa etc. Avoid structural meshes.
+    if (obj.isMesh && obj.material && 
+        !obj.name.includes('wall') && 
+        !obj.name.includes('slab') && 
+        !obj.name.includes('floor') && 
+        !obj.name.includes('column') && 
+        !obj.name.includes('stair') && 
+        !obj.name.includes('spoke')) {
+      found = intersects[i];
+      break;
+    }
+  }
+
+  if (found) {
+    const obj = found.object;
+    document.body.style.cursor = 'pointer';
+    if (hoveredObject !== obj) {
+      // Reset previous
+      if (hoveredObject && hoveredObject.material && hoveredObject.material.emissive) {
+        hoveredObject.material.emissive.setHex(hoveredObject.savedEmissiveHex || 0x000000);
+      }
+      hoveredObject = obj;
+      if (obj.material && obj.material.emissive) {
+        if (obj.savedEmissiveHex === undefined) {
+          obj.savedEmissiveHex = obj.material.emissive.getHex();
+        }
+        // Subtle golden highlighting glow
+        obj.material.emissive.setHex(0x2d240c);
+      }
+    }
+  } else {
+    document.body.style.cursor = 'default';
+    if (hoveredObject) {
+      if (hoveredObject.material && hoveredObject.material.emissive) {
+        hoveredObject.material.emissive.setHex(hoveredObject.savedEmissiveHex || 0x000000);
+      }
+      hoveredObject = null;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  ONBOARDING TUTORIAL & PRODUCT DETAILS CARD BINDINGS
+// ─────────────────────────────────────────────────
+let currentStep = 1;
+const tutorialOverlay = document.getElementById('tutorial-overlay');
+const nextBtn = document.getElementById('tutorial-next-btn');
+
+function showOnboardingTutorial() {
+  const hasVisited = localStorage.getItem('visitedShowroom');
+  if (!hasVisited && tutorialOverlay) {
+    tutorialOverlay.classList.remove('tutorial-hidden');
+  }
+}
+
+if (nextBtn) {
+  nextBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const activeStep = document.querySelector(`.tutorial-step[data-step="${currentStep}"]`);
+    if (activeStep) activeStep.classList.remove('active');
+
+    currentStep++;
+    const nextStep = document.querySelector(`.tutorial-step[data-step="${currentStep}"]`);
+    if (nextStep) {
+      nextStep.classList.add('active');
+      if (currentStep === 3) {
+        nextBtn.textContent = 'Got It!';
+      }
+    } else {
+      if (tutorialOverlay) tutorialOverlay.classList.add('tutorial-hidden');
+      localStorage.setItem('visitedShowroom', 'true');
+    }
+  });
+}
+
+// Up/Down HUD arrow click listeners
+const btnUp = document.getElementById('floor-up-btn');
+const btnDown = document.getElementById('floor-down-btn');
+
+if (btnUp) {
+  btnUp.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (currentInteriorFloor < FLOORS.length - 1) {
+      goToInteriorFloor(currentInteriorFloor + 1);
+    }
+  });
+}
+if (btnDown) {
+  btnDown.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (currentInteriorFloor > 0) {
+      goToInteriorFloor(currentInteriorFloor - 1);
+    }
+  });
+}
+
+// Product Details panel close bindings
+const prodClose = document.getElementById('product-panel-close');
+const prodPanel = document.getElementById('product-panel');
+
+if (prodClose && prodPanel) {
+  prodClose.addEventListener('click', (e) => {
+    e.stopPropagation();
+    prodPanel.classList.add('product-panel-hidden');
+    document.querySelectorAll('.prop-hotspot-btn').forEach(b => b.classList.remove('active'));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#product-panel') && !e.target.closest('.prop-hotspot-btn')) {
+      prodPanel.classList.add('product-panel-hidden');
+      document.querySelectorAll('.prop-hotspot-btn').forEach(b => b.classList.remove('active'));
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  🌓 DAY/NIGHT LIGHTING MODE TOGGLE
+// ─────────────────────────────────────────────────
+let isNight = false;
+const dnToggle = document.getElementById('daynight-toggle');
+const dnIcon = document.getElementById('daynight-icon');
+const dnText = document.getElementById('daynight-text');
+
+if (dnToggle) {
+  dnToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    isNight = !isNight;
+    if (dnIcon) dnIcon.textContent = isNight ? '☀️' : '🌙';
+    if (dnText) dnText.textContent = isNight ? 'DAY MODE' : 'NIGHT MODE';
+
+    // Animate lights
+    gsap.to(ambientLight, {
+      intensity: isNight ? 0.15 : 0.85,
+      duration: 1.5,
+      ease: 'power2.out'
+    });
+    gsap.to(ambientLight.color, {
+      r: isNight ? 0.35 : 1.0,
+      g: isNight ? 0.45 : 1.0,
+      b: isNight ? 0.75 : 1.0,
+      duration: 1.5,
+      ease: 'power2.out'
+    });
+    gsap.to(keyLight, {
+      intensity: isNight ? 0.4 : 3.2,
+      duration: 1.5,
+      ease: 'power2.out'
+    });
+    gsap.to(scene.fog, {
+      density: isNight ? 0.012 : 0.006,
+      duration: 1.5,
+      ease: 'power2.out'
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  🔍 PRODUCT SEARCH & FOCUS NAVIGATION
+// ─────────────────────────────────────────────────
+const SEARCH_FOCUS = {
+  'Tomo Koizumi Gown': { floor: 0, pos: { x: 2.1, y: 1.2, z: 1.2 }, target: { x: 3.4, y: 0.9, z: -0.4 } },
+  'Hirume Bonsai': { floor: 0, pos: { x: -1.2, y: 1.1, z: 1.0 }, target: { x: -2.8, y: 0.7, z: -0.4 } },
+  'Rod Chandelier': { floor: 0, pos: { x: 0, y: 1.5, z: 3.5 }, target: { x: 0, y: 2.3, z: 0 } },
+  'Organic Tees': { floor: 1, pos: { x: 0, y: FLOOR_H + 1.25, z: 1.1 }, target: { x: 0, y: FLOOR_H + 1.2, z: -1.8 } },
+  'Organizer Stand': { floor: 1, pos: { x: -1.2, y: FLOOR_H + 1.1, z: 0.8 }, target: { x: -2.8, y: FLOOR_H + 1.0, z: -0.3 } },
+  'Organic Hoodies': { floor: 2, pos: { x: 0, y: FLOOR_H * 2 + 1.25, z: 1.1 }, target: { x: 0, y: FLOOR_H * 2 + 1.2, z: -1.8 } },
+  'Accessories Collection': { floor: 3, pos: { x: 0, y: FLOOR_H * 3 + 1.25, z: 1.1 }, target: { x: 0, y: FLOOR_H * 3 + 1.2, z: -1.8 } }
+};
+
+const searchInput = document.getElementById('search-input');
+const searchSuggestions = document.getElementById('search-suggestions');
+
+if (searchInput && searchSuggestions) {
+  searchInput.addEventListener('focus', () => {
+    searchSuggestions.classList.remove('search-sug-hidden');
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+      searchSuggestions.classList.add('search-sug-hidden');
+    }
+  });
+
+  searchSuggestions.querySelectorAll('.sug-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const val = item.getAttribute('data-val');
+      searchInput.value = val;
+      searchSuggestions.classList.add('search-sug-hidden');
+      performSearchFocus(val);
+    });
+  });
+
+  searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      performSearchFocus(searchInput.value);
+      searchSuggestions.classList.add('search-sug-hidden');
+    }
+  });
+}
+
+function performSearchFocus(query) {
+  let matchedKey = null;
+  const keys = Object.keys(SEARCH_FOCUS);
+  for (const key of keys) {
+    if (key.toLowerCase().includes(query.toLowerCase())) {
+      matchedKey = key;
+      break;
+    }
+  }
+
+  if (!matchedKey) return;
+  const config = SEARCH_FOCUS[matchedKey];
+
+  if (!isInside) {
+    enterBuilding();
+    setTimeout(() => {
+      triggerFocusAnim(config, matchedKey);
+    }, 3100);
+  } else {
+    triggerFocusAnim(config, matchedKey);
+  }
+}
+
+function triggerFocusAnim(config, name) {
+  goToInteriorFloor(config.floor);
+
+  animating = true;
+  controls.enabled = false;
+
+  gsap.to(camera.position, {
+    x: config.pos.x, y: config.pos.y, z: config.pos.z,
+    duration: 1.6, ease: 'power3.inOut',
     onUpdate: () => controls.update()
   });
-  gsap.from(building.scale, {
-    x: 0, y: 0, z: 0,
-    duration: 2.2,
-    ease: 'back.out(1.6)',
-    delay: 0.3,
+
+  gsap.to(controls.target, {
+    x: config.target.x, y: config.target.y, z: config.target.z,
+    duration: 1.6, ease: 'power3.inOut',
+    onUpdate: () => controls.update(),
+    onComplete: () => {
+      controls.enabled = true;
+      animating = false;
+
+      // Open detail panel
+      const details = PROP_DATABASE[name] || { price: '$0.00', icon: '🏷️', desc: '' };
+      document.getElementById('prod-title').textContent = name;
+      document.getElementById('prod-price').textContent = details.price;
+      document.getElementById('prod-desc').textContent = details.desc;
+      document.querySelector('.product-panel-icon').textContent = details.icon;
+      
+      if (prodPanel) prodPanel.classList.remove('product-panel-hidden');
+    }
   });
-}, 1600);
+}
+
+// ─────────────────────────────────────────────────
+//  🔇 WEB AUDIO PROCEDURAL BACKGROUND AMBIENT SOUNDPAD
+// ─────────────────────────────────────────────────
+let audioCtx = null;
+let isPlaying = false;
+let osc1, osc2, gainNode;
+
+function startAmbientAudio() {
+  if (isPlaying) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    osc1 = audioCtx.createOscillator();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(110, audioCtx.currentTime); // A2
+
+    osc2 = audioCtx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(165, audioCtx.currentTime); // E3 (fifth)
+
+    gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 3.0);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(320, audioCtx.currentTime);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    osc1.start();
+    osc2.start();
+    isPlaying = true;
+    
+    document.getElementById('music-status-text').textContent = 'SOUND OFF';
+  } catch (e) {
+    console.warn('Web Audio pad failed to start:', e);
+  }
+}
+
+function toggleAmbientAudio() {
+  if (!audioCtx) {
+    startAmbientAudio();
+    return;
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+    document.getElementById('music-status-text').textContent = 'SOUND OFF';
+  } else if (audioCtx.state === 'running') {
+    audioCtx.suspend();
+    document.getElementById('music-status-text').textContent = 'SOUND ON';
+  }
+}
+
+const musicToggle = document.getElementById('music-toggle');
+if (musicToggle) {
+  musicToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleAmbientAudio();
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  LOADING EXPERIENCE & STORYTELLING
+// ─────────────────────────────────────────────────
+const loadingStories = [
+  "We believe in organic, climate-neutral fashion...",
+  "Ethically sourced, crafted for the planet...",
+  "Step into the future of sustainable luxury...",
+  "Earth Positive — Fashion for a better tomorrow."
+];
+let storyIndex = 0;
+const storyEl = document.getElementById('loading-story');
+const storyInterval = setInterval(() => {
+  if (storyEl) {
+    storyEl.style.opacity = 0;
+    setTimeout(() => {
+      storyIndex = (storyIndex + 1) % loadingStories.length;
+      storyEl.textContent = loadingStories[storyIndex];
+      storyEl.style.opacity = 1;
+    }, 500);
+  }
+}, 3000);
+
+THREE.DefaultLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+  const progress = Math.min((itemsLoaded / itemsTotal) * 100, 100);
+  const progressBar = document.getElementById('loading-bar-fill');
+  const progressPercent = document.getElementById('loading-percent');
+  if (progressBar) progressBar.style.width = `${progress}%`;
+  if (progressPercent) progressPercent.textContent = `${Math.round(progress)}%`;
+};
+
+THREE.DefaultLoadingManager.onLoad = () => {
+  clearInterval(storyInterval);
+  setTimeout(() => {
+    const loadingScreen = document.getElementById('loading');
+    if (loadingScreen) loadingScreen.classList.add('hidden');
+    
+    floorInfoEl.classList.add('visible');
+    fiTitle.textContent = 'Earth Positive Flagship';
+    fiDesc.textContent = 'Explore our luxury collections';
+
+    // Cinematic intro pan
+    gsap.from(camera.position, {
+      z: 50, y: 24,
+      duration: 2.8,
+      ease: 'power4.out',
+      onUpdate: () => controls.update()
+    });
+    gsap.from(building.scale, {
+      x: 0, y: 0, z: 0,
+      duration: 2.2,
+      ease: 'back.out(1.6)',
+      delay: 0.3,
+    });
+  }, 800);
+};
+
+// Fallback safety boot loader trigger
+setTimeout(() => {
+  const loadingScreen = document.getElementById('loading');
+  if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+    clearInterval(storyInterval);
+    loadingScreen.classList.add('hidden');
+    floorInfoEl.classList.add('visible');
+    
+    gsap.from(camera.position, {
+      z: 50, y: 24,
+      duration: 2.8,
+      ease: 'power4.out',
+      onUpdate: () => controls.update()
+    });
+  }
+}, 3500);

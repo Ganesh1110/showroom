@@ -14,6 +14,11 @@
   <div class="loader-ring"></div>
   <div class="loader-brand">EARTH POSITIVE</div>
   <div class="loader-sub">Loading Flagship Store</div>
+  <div id="loading-bar-container">
+    <div id="loading-bar-fill"></div>
+  </div>
+  <div id="loading-percent">0%</div>
+  <div id="loading-story">We believe in organic, climate-neutral fashion...</div>
 </div>
 
 <!-- Header HUD -->
@@ -22,9 +27,25 @@
     <div class="brand-name">Earth Positive</div>
     <div class="brand-sub">Virtual Flagship Store</div>
   </div>
-  <div class="tagline">
-    <span class="tag-line">Fashion for the People, the Planet, the Future</span>
-    <span class="tag-sub">Organic · Ethical · Climate Neutral</span>
+  <div class="header-controls">
+    <!-- Search bar -->
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="SEARCH PRODUCTS..." aria-label="Search Showroom" autocomplete="off">
+      <div id="search-suggestions" class="search-sug-hidden">
+        <div class="sug-item" data-val="Tomo Koizumi Gown">Tomo Koizumi Gown</div>
+        <div class="sug-item" data-val="Hirume Bonsai">Hirume Bonsai</div>
+        <div class="sug-item" data-val="Organic Tees">Organic Tees</div>
+        <div class="sug-item" data-val="Organic Hoodies">Organic Hoodies</div>
+        <div class="sug-item" data-val="Accessories Collection">Accessories Suite</div>
+      </div>
+    </div>
+    <!-- Music Mute/Unmute -->
+    <button id="music-toggle" aria-label="Toggle Background Music">
+      <svg class="music-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:middle">
+        <path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+      <span id="music-status-text">PLAY AMBIENT</span>
+    </button>
   </div>
 </div>
 
@@ -34,19 +55,76 @@
   <div class="fi-desc" id="fiDesc">Explore our luxury collections</div>
 </div>
 
-<!-- Back button (visible when inside) -->
-<button id="back-btn" aria-label="Exit Showroom">
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-    <path d="M8 1L3 6L8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-  Exit Showroom
-</button>
+<!-- Day/Night & Exit action cluster -->
+<div id="top-left-actions">
+  <button id="daynight-toggle" aria-label="Toggle Lighting Mode">
+    <span id="daynight-icon" style="margin-right:5px">🌙</span><span id="daynight-text">NIGHT MODE</span>
+  </button>
+  <button id="back-btn" aria-label="Exit Showroom">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path d="M8 1L3 6L8 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Exit Showroom
+  </button>
+</div>
 
 <!-- Interior HUD panel -->
 <div id="interior-hud">
-  <div class="interior-floor-name" id="interiorTitle">Grand Lobby</div>
-  <div class="interior-floor-desc" id="interiorDesc">Welcome to the world of Earth Positive</div>
+  <div style="display:flex; justify-content:space-between; align-items:center; gap: 20px;">
+    <div>
+      <div class="interior-floor-name" id="interiorTitle">Grand Lobby</div>
+      <div class="interior-floor-desc" id="interiorDesc">Welcome to the world of Earth Positive</div>
+    </div>
+    <div class="floor-nav-controls">
+      <button id="floor-up-btn" aria-label="Go Up Floor" class="floor-nav-arrow-btn">
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 5L5 1L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="floor-down-btn" aria-label="Go Down Floor" class="floor-nav-arrow-btn">
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
   <div class="interior-floor-items" id="interiorTags"></div>
+</div>
+
+<!-- Onboarding Tutorial Overlay -->
+<div id="tutorial-overlay" class="tutorial-hidden">
+  <div class="tutorial-card">
+    <div class="tutorial-header">HOW TO NAVIGATE</div>
+    <div class="tutorial-steps">
+      <div class="tutorial-step active" data-step="1">
+        <div class="step-num">01</div>
+        <div class="step-txt">Click and drag your mouse to explore the room. Scroll to zoom in and out.</div>
+      </div>
+      <div class="tutorial-step" data-step="2">
+        <div class="step-num">02</div>
+        <div class="step-txt">Click on any floating "+" buttons to view garment and display details.</div>
+      </div>
+      <div class="tutorial-step" data-step="3">
+        <div class="step-num">03</div>
+        <div class="step-txt">Use the up/down arrows in the bottom panel or your keyboard (← / →) to change floors.</div>
+      </div>
+    </div>
+    <div class="tutorial-footer">
+      <button id="tutorial-next-btn">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Detail Panel (Wishlist & CTAs) -->
+<div id="product-panel" class="product-panel-hidden">
+  <button id="product-panel-close" aria-label="Close Product Details">&times;</button>
+  <div class="product-panel-header">PRODUCT DETAILS</div>
+  <div class="product-panel-content">
+    <div class="product-panel-icon">👕</div>
+    <h3 id="prod-title" class="product-panel-title">Classic Tee</h3>
+    <div id="prod-price" class="product-panel-price">$45.00</div>
+    <p id="prod-desc" class="product-panel-description">Organic, sustainable heavyweight cotton tee.</p>
+    <div class="product-panel-ctas">
+      <button class="product-panel-btn primary">Add to Wishlist</button>
+      <button class="product-panel-btn secondary">View Details</button>
+    </div>
+  </div>
 </div>
 
 <!-- Nav Dots (exterior nav) -->
