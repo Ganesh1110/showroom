@@ -124,11 +124,11 @@ const marbleMat = new THREE.MeshStandardMaterial({
 });
 
 const warmGlow = new THREE.MeshStandardMaterial({
-  color: 0xFFD54F,
-  emissive: 0xFFD54F,
-  emissiveIntensity: 0.6,
+  color: 0xFFFFFF,
+  emissive: 0xFFFFFF,
+  emissiveIntensity: 0.5,
   transparent: true,
-  opacity: 0.2,
+  opacity: 0.18,
   side: THREE.DoubleSide
 });
 
@@ -211,44 +211,49 @@ for (let i = 0; i < NUM_FLOORS; i++) {
   trim2.position.set(0, y + 0.05, -D/2 - 0.35);
   building.add(trim2);
 
-  // Glass panels
+  // Wall Height
   const wallH = FLOOR_H - 0.2;
 
-  const glassFront = new THREE.Mesh(
+  // Glass panel on the front face (Z = +D/2)
+  const glassFrontFacade = new THREE.Mesh(
     new THREE.PlaneGeometry(W - 0.8, wallH - 0.2),
     glassMat.clone()
   );
-  glassFront.position.set(0, y + wallH/2 + 0.06, -D/2 + 0.02);
-  glassFront.material.opacity = 0.15 + i * 0.025;
-  building.add(glassFront);
+  glassFrontFacade.position.set(0, y + wallH/2 + 0.06, D/2 - 0.02);
+  glassFrontFacade.material.opacity = 0.15 + i * 0.025;
+  building.add(glassFrontFacade);
 
-  const glassBack = glassFront.clone();
-  glassBack.position.set(0, y + wallH/2 + 0.06, D/2 - 0.02);
-  building.add(glassBack);
-
-  // Gold vertical mullions
+  // Front face vertical mullions
   for (let j = -3; j <= 3; j++) {
-    const m = new THREE.Mesh(
+    const mFront = new THREE.Mesh(
       new THREE.BoxGeometry(0.04, wallH - 0.2, 0.04),
       goldDarkMat
     );
-    m.position.set(j * 1.0, y + wallH/2 + 0.06, -D/2 + 0.02);
-    building.add(m);
-    const m2 = m.clone();
-    m2.position.set(j * 1.0, y + wallH/2 + 0.06, D/2 - 0.02);
-    building.add(m2);
+    mFront.position.set(j * 1.0, y + wallH/2 + 0.06, D/2 - 0.02);
+    building.add(mFront);
   }
 
-  // Side glass (left/right)
-  for (const x of [-W/2 + 0.02, W/2 - 0.02]) {
-    const side = new THREE.Mesh(
-      new THREE.PlaneGeometry(D - 0.8, wallH - 0.2),
-      glassMat.clone()
+  // Solid Back Wall (Z = -D/2)
+  const backSolidWall = new THREE.Mesh(
+    new THREE.BoxGeometry(W - 0.1, wallH, 0.1),
+    marbleMat
+  );
+  backSolidWall.position.set(0, y + wallH/2 + 0.06, -D/2 + 0.05);
+  backSolidWall.castShadow = true;
+  backSolidWall.receiveShadow = true;
+  building.add(backSolidWall);
+
+  // Solid Left & Right Walls
+  for (const x of [-W/2 + 0.05, W/2 - 0.05]) {
+    const sideSolidWall = new THREE.Mesh(
+      new THREE.BoxGeometry(D - 0.1, wallH, 0.1),
+      marbleMat
     );
-    side.position.set(x, y + wallH/2 + 0.06, 0);
-    side.rotation.y = Math.PI / 2;
-    side.material.opacity = 0.2;
-    building.add(side);
+    sideSolidWall.position.set(x, y + wallH/2 + 0.06, 0);
+    sideSolidWall.rotation.y = Math.PI / 2;
+    sideSolidWall.castShadow = true;
+    sideSolidWall.receiveShadow = true;
+    building.add(sideSolidWall);
   }
 
   // Gold corner pillars
@@ -410,12 +415,12 @@ function createChandelier(y) {
   // Light sphere in center
   const lightSphere = new THREE.Mesh(
     new THREE.SphereGeometry(0.08, 8, 8),
-    new THREE.MeshBasicMaterial({ color: 0xFFD54F })
+    new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
   );
   lightSphere.position.y = 0;
   group.add(lightSphere);
 
-  const pointLight = new THREE.PointLight(0xFFD54F, 0.5, 4);
+  const pointLight = new THREE.PointLight(0xFFFFFF, 0.5, 4);
   pointLight.position.y = 0;
   group.add(pointLight);
 
@@ -779,8 +784,8 @@ function createGlobeLight(x, y, z) {
   const globe = new THREE.Mesh(
     new THREE.SphereGeometry(0.06, 12, 12),
     new THREE.MeshPhysicalMaterial({
-      color: 0xFFD54F,
-      emissive: 0xFFD54F,
+      color: 0xFFFFFF,
+      emissive: 0xFFFFFF,
       emissiveIntensity: 0.5,
       transparent: true,
       opacity: 0.8
@@ -789,7 +794,7 @@ function createGlobeLight(x, y, z) {
   globe.position.y = 0.35;
   group.add(globe);
 
-  const pl = new THREE.PointLight(0xFFD54F, 0.2, 3);
+  const pl = new THREE.PointLight(0xFFFFFF, 0.2, 3);
   pl.position.y = 0.35;
   group.add(pl);
 
