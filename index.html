@@ -5,24 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Earth Positive — Virtual Flagship Store</title>
   <meta name="description" content="Step into the Earth Positive Virtual Flagship Store — an immersive 3D retail experience powered by sustainable fashion.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
 
 <!-- Loading Screen -->
-<div id="loading">
+<div id="loading" role="status" aria-live="polite">
   <div class="loader-ring"></div>
   <div class="loader-brand">EARTH POSITIVE</div>
   <div class="loader-sub">Loading Flagship Store</div>
   <div id="loading-bar-container">
-    <div id="loading-bar-fill"></div>
+    <div id="loading-bar-fill" aria-label="Loading progress"></div>
   </div>
   <div id="loading-percent">0%</div>
   <div id="loading-story">We believe in organic, climate-neutral fashion...</div>
 </div>
 
 <!-- Header HUD -->
-<div id="header">
+<div id="header" role="banner">
   <div class="brand">
     <div class="brand-name">Earth Positive</div>
     <div class="brand-sub">Virtual Flagship Store</div>
@@ -30,13 +31,13 @@
   <div class="header-controls">
     <!-- Search bar -->
     <div class="search-container">
-      <input type="text" id="search-input" placeholder="SEARCH PRODUCTS..." aria-label="Search Showroom" autocomplete="off">
-      <div id="search-suggestions" class="search-sug-hidden">
-        <div class="sug-item" data-val="Tomo Koizumi Gown">Tomo Koizumi Gown</div>
-        <div class="sug-item" data-val="Hirume Bonsai">Hirume Bonsai</div>
-        <div class="sug-item" data-val="Organic Tees">Organic Tees</div>
-        <div class="sug-item" data-val="Organic Hoodies">Organic Hoodies</div>
-        <div class="sug-item" data-val="Accessories Collection">Accessories Suite</div>
+      <input type="text" id="search-input" placeholder="SEARCH PRODUCTS..." aria-label="Search Showroom Products" autocomplete="off">
+      <div id="search-suggestions" class="search-sug-hidden" role="listbox">
+        <div class="sug-item" data-val="Tomo Koizumi Gown" role="option">Tomo Koizumi Gown</div>
+        <div class="sug-item" data-val="Hirume Bonsai" role="option">Hirume Bonsai</div>
+        <div class="sug-item" data-val="Organic Tees" role="option">Organic Tees</div>
+        <div class="sug-item" data-val="Organic Hoodies" role="option">Organic Hoodies</div>
+        <div class="sug-item" data-val="Accessories Collection" role="option">Accessories Suite</div>
       </div>
     </div>
     <!-- Music Mute/Unmute -->
@@ -46,11 +47,19 @@
       </svg>
       <span id="music-status-text">PLAY AMBIENT</span>
     </button>
+    <!-- Wishlist Counter Badge -->
+    <div id="wishlist-btn" class="wishlist-btn" aria-label="Wishlist items">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:5px;vertical-align:middle;color:#ff3366">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+      <span>WISHLIST</span>
+      <span id="wishlist-badge">0</span>
+    </div>
   </div>
 </div>
 
 <!-- Floor info (exterior) -->
-<div id="floor-info">
+<div id="floor-info" aria-live="polite">
   <div class="fi-title" id="fiTitle">Earth Positive Flagship</div>
   <div class="fi-desc" id="fiDesc">Explore our luxury collections</div>
 </div>
@@ -69,10 +78,10 @@
 </div>
 
 <!-- Interior HUD panel -->
-<div id="interior-hud">
+<div id="interior-hud" role="region" aria-label="Floor Information HUD">
   <div style="display:flex; justify-content:space-between; align-items:center; gap: 20px;">
     <div>
-      <div class="interior-floor-name" id="interiorTitle">Grand Lobby</div>
+      <h1 class="interior-floor-name" id="interiorTitle">Grand Lobby</h1>
       <div class="interior-floor-desc" id="interiorDesc">Welcome to the world of Earth Positive</div>
     </div>
     <div class="floor-nav-controls">
@@ -84,13 +93,13 @@
       </button>
     </div>
   </div>
-  <div class="interior-floor-items" id="interiorTags"></div>
+  <div class="interior-floor-items" id="interiorTags" role="list"></div>
 </div>
 
 <!-- Onboarding Tutorial Overlay -->
-<div id="tutorial-overlay" class="tutorial-hidden">
+<div id="tutorial-overlay" class="tutorial-hidden" role="dialog" aria-modal="true" aria-labelledby="tut-header">
   <div class="tutorial-card">
-    <div class="tutorial-header">HOW TO NAVIGATE</div>
+    <div id="tut-header" class="tutorial-header">HOW TO NAVIGATE</div>
     <div class="tutorial-steps">
       <div class="tutorial-step active" data-step="1">
         <div class="step-num">01</div>
@@ -112,23 +121,23 @@
 </div>
 
 <!-- Product Detail Panel (Wishlist & CTAs) -->
-<div id="product-panel" class="product-panel-hidden">
+<div id="product-panel" class="product-panel-hidden" role="dialog" aria-modal="true" aria-labelledby="prod-title">
   <button id="product-panel-close" aria-label="Close Product Details">&times;</button>
   <div class="product-panel-header">PRODUCT DETAILS</div>
   <div class="product-panel-content">
-    <div class="product-panel-icon">👕</div>
-    <h3 id="prod-title" class="product-panel-title">Classic Tee</h3>
+    <div id="product-icon-container" class="product-panel-icon-svg" aria-hidden="true"></div>
+    <h2 id="prod-title" class="product-panel-title">Classic Tee</h2>
     <div id="prod-price" class="product-panel-price">$45.00</div>
     <p id="prod-desc" class="product-panel-description">Organic, sustainable heavyweight cotton tee.</p>
     <div class="product-panel-ctas">
-      <button class="product-panel-btn primary">Add to Wishlist</button>
-      <button class="product-panel-btn secondary">View Details</button>
+      <button class="product-panel-btn primary" aria-label="Add to Wishlist">Add to Wishlist</button>
+      <button class="product-panel-btn secondary" aria-label="View Details">View Details</button>
     </div>
   </div>
 </div>
 
 <!-- Nav Dots (exterior nav) -->
-<div id="nav-dots">
+<div id="nav-dots" role="navigation" aria-label="Exterior View Navigation">
   <button class="dot active" data-idx="0"><span class="dot-label">Overview</span></button>
   <button class="dot" data-idx="1"><span class="dot-label">Lobby</span></button>
   <button class="dot" data-idx="2"><span class="dot-label">T‑Shirts</span></button>
@@ -139,6 +148,11 @@
 
 <!-- Hint -->
 <div id="hint">Drag to Orbit · Scroll to Zoom · Click Door to Enter</div>
+
+<!-- Brand Watermark -->
+<div class="brand-watermark" aria-hidden="true">
+  <span>EARTH POSITIVE © 2026</span>
+</div>
 
 <!-- Transition overlay -->
 <div id="transition-overlay"></div>

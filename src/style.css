@@ -690,4 +690,143 @@ canvas { display: block; }
   50% { opacity: 1; }
 }
 
+/* ── E-Commerce Wishlist Button & Badging ── */
+.wishlist-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0,0,0,0.72);
+  border: 1px solid rgba(251,215,110,0.22);
+  border-radius: 2px;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  pointer-events: auto;
+}
+.wishlist-btn:hover {
+  background: rgba(251,215,110,0.1);
+  border-color: var(--gold);
+}
+#wishlist-badge {
+  background: #ff3366;
+  color: #ffffff;
+  font-size: 0.55rem;
+  font-weight: 700;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -5px; right: -5px;
+  box-shadow: 0 0 5px rgba(255,51,102,0.6);
+}
+
+/* ── SVG Product Panel Icons ── */
+.product-panel-icon-svg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0.8rem auto 1.2rem;
+  width: 48px;
+  height: 48px;
+  color: var(--gold-light);
+}
+.product-panel-icon-svg svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Brand Watermark ── */
+.brand-watermark {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 2.8rem;
+  z-index: 10;
+  pointer-events: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 300;
+  letter-spacing: 0.25em;
+  color: rgba(255,255,255,0.18);
+  text-transform: uppercase;
+}
+
+/* ── Responsive Styling (Media Queries) ── */
+@media (max-width: 1024px) {
+  #header {
+    padding: 1.5rem 2rem;
+  }
+  #top-left-actions {
+    top: 6.5rem;
+    left: 2rem;
+  }
+  #nav-dots {
+    right: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  #floor-info {
+    display: none;
+  }
+  #nav-dots {
+    display: none !important;
+  }
+  #header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.2rem 1.5rem;
+  }
+  .header-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  #search-input {
+    width: 110px;
+  }
+  #search-input:focus {
+    width: 140px;
+  }
+  #top-left-actions {
+    top: auto;
+    bottom: 8.5rem;
+    left: 1.5rem;
+  }
+  #interior-hud {
+    padding: 1.2rem 1.5rem;
+  }
+  
+  /* Slide Up bottom sheet on mobile instead of side panel */
+  #product-panel {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    transform: translateY(100%);
+    border-top: 1px solid rgba(201,168,76,0.3);
+    border-left: none;
+    border-right: none;
+    border-radius: 12px 12px 0 0;
+    padding: 1.4rem 1.6rem 2rem;
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+  #product-panel.product-panel-hidden {
+    transform: translateY(100%);
+    opacity: 1;
+  }
+}
+
+
 
