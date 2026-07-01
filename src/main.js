@@ -629,8 +629,15 @@ const stairs4 = createStaircase(FLOOR_H * 3 + 0.04, FLOOR_H * 4, -2.8, 0);
 building.add(stairs4);
 
 // FLOOR 0: Earth Positive Flagship (Ground retail entrance area)
+// Internal light
+const lightG = new THREE.PointLight(0xFFFFFF, 1.8, 8);
+lightG.position.set(0, 1.8, 0);
+building.add(lightG);
+
 const staffG = createCharacter(0, 0.04, 0.8, Math.PI, true);
 building.add(staffG);
+const rackG = createClothingRack(-1.6, 0.04, -1.0, 0, 0x111111);
+building.add(rackG);
 const tableG = createDisplayTable(1.8, 0.04, -1.0, Math.PI / 6);
 building.add(tableG);
 const manG1 = createCharacter(-1.8, 0.04, D/2 - 0.8, Math.PI / 4, false);
@@ -639,6 +646,11 @@ const manG2 = createCharacter(1.8, 0.04, D/2 - 0.8, -Math.PI / 4, false);
 building.add(manG2);
 
 // FLOOR 1: Grand Lobby (Reception & Lounge seating)
+// Internal light
+const lightL = new THREE.PointLight(0xFFFFFF, 1.8, 8);
+lightL.position.set(0, FLOOR_H + 1.8, 0);
+building.add(lightL);
+
 const receptionDesk = new THREE.Mesh(
   new THREE.BoxGeometry(1.5, 0.8, 0.5),
   new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.5 })
@@ -651,6 +663,41 @@ const receptionTrim = new THREE.Mesh(
 );
 receptionTrim.position.set(0, FLOOR_H + 0.82, 0.4);
 building.add(receptionTrim);
+
+// Laptop on Desk
+const laptopBase = new THREE.Mesh(
+  new THREE.BoxGeometry(0.2, 0.01, 0.15),
+  new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 })
+);
+laptopBase.position.set(0, FLOOR_H + 0.84, 0.45);
+building.add(laptopBase);
+
+const laptopScreen = new THREE.Mesh(
+  new THREE.BoxGeometry(0.2, 0.15, 0.01),
+  new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 })
+);
+laptopScreen.position.set(0, FLOOR_H + 0.92, 0.38);
+laptopScreen.rotation.x = -Math.PI / 6;
+building.add(laptopScreen);
+
+// Potted Plant in Corner
+const pot = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.14, 0.1, 0.3, 8),
+  new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 })
+);
+pot.position.set(-2.2, FLOOR_H + 0.15, 1.2);
+building.add(pot);
+
+const plantLeaves = new THREE.Mesh(
+  new THREE.SphereGeometry(0.22, 8, 8),
+  new THREE.MeshStandardMaterial({ color: 0x1b5e20, roughness: 0.8 })
+);
+plantLeaves.position.set(-2.2, FLOOR_H + 0.38, 1.2);
+building.add(plantLeaves);
+
+// Lobby Best Seller Dress Rack
+const lobbyRack = createClothingRack(-2.0, FLOOR_H + 0.04, -0.6, Math.PI / 4, 0xC9A84C);
+building.add(lobbyRack);
 
 // Lobby staff
 const receptionDeskStaff = createCharacter(0, FLOOR_H + 0.04, 0.0, 0, true);
@@ -668,6 +715,11 @@ sofaR.position.set(2.0, FLOOR_H + 0.2, -1.0);
 building.add(sofaR);
 
 // FLOOR 2: T-Shirts Atelier
+// Internal light
+const lightT = new THREE.PointLight(0xFFFFFF, 1.8, 8);
+lightT.position.set(0, FLOOR_H * 2 + 1.8, 0);
+building.add(lightT);
+
 const rackT1 = createClothingRack(-1.6, FLOOR_H * 2 + 0.04, -1.0, 0, 0xe53935);
 building.add(rackT1);
 const rackT2 = createClothingRack(1.6, FLOOR_H * 2 + 0.04, -1.0, 0, 0x222222);
@@ -677,7 +729,16 @@ building.add(tableT);
 const mannequinT = createCharacter(0, FLOOR_H * 2 + 0.04, -0.2, 0, false);
 building.add(mannequinT);
 
+// Guiding staff member for Floor 2
+const staffT = createCharacter(0.8, FLOOR_H * 2 + 0.04, 0.8, Math.PI, true);
+building.add(staffT);
+
 // FLOOR 3: Hoodies & Sweatstreet
+// Internal light
+const lightH = new THREE.PointLight(0xFFFFFF, 1.8, 8);
+lightH.position.set(0, FLOOR_H * 3 + 1.8, 0);
+building.add(lightH);
+
 const rackH1 = createClothingRack(-1.6, FLOOR_H * 3 + 0.04, -1.0, 0, 0x1b5e20);
 building.add(rackH1);
 const rackH2 = createClothingRack(1.6, FLOOR_H * 3 + 0.04, -1.0, 0, 0xffa000);
@@ -686,6 +747,10 @@ const mannequinH1 = createCharacter(-0.6, FLOOR_H * 3 + 0.04, 0.8, Math.PI / 8, 
 building.add(mannequinH1);
 const mannequinH2 = createCharacter(0.6, FLOOR_H * 3 + 0.04, 0.8, -Math.PI / 8, false);
 building.add(mannequinH2);
+
+// Guiding staff member for Floor 3
+const staffH = createCharacter(0.8, FLOOR_H * 3 + 0.04, 0.8, Math.PI, true);
+building.add(staffH);
 
 // ROOFTOP / PENTHOUSE LOUNGE
 const loungeChairL = new THREE.Mesh(
