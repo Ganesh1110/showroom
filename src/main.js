@@ -274,13 +274,7 @@ for (let i = 0; i < NUM_FLOORS; i++) {
   glow.material.opacity = 0.1 + i * 0.04;
   building.add(glow);
 
-  // Floor label
-  if (i > 0) {
-    const names = ['LOBBY', 'T-SHIRTS', 'HOODIES', 'ACCESSORIES'];
-    const lbl = cssLabel(`FLOOR ${i+1} · ${names[i]}`);
-    lbl.position.set(0, y + wallH/2, -D/2 - 0.9);
-    building.add(lbl);
-  }
+
 }
 
 // ── Grand Entrance ──
@@ -367,9 +361,7 @@ for (let i = 0; i < 12; i++) {
   building.add(post);
 }
 
-const roofLabel = cssLabel('PENTHOUSE LOUNGE', '#F5D76E', '11px', 'rgba(0,0,0,0.7)');
-roofLabel.position.set(0, NUM_FLOORS * FLOOR_H + 0.7, 0);
-building.add(roofLabel);
+
 
 // ── Chandelier in lobby ──
 function createChandelier(y) {
@@ -433,6 +425,280 @@ function createChandelier(y) {
 
 const chandelier = createChandelier(0.2);
 building.add(chandelier);
+
+// ── Spiral Staircase Generator ──
+function createStaircase(startY, endY, pivotX, pivotZ) {
+  const group = new THREE.Group();
+  const stepCount = 16;
+  const heightDiff = endY - startY;
+  const stepHeight = heightDiff / stepCount;
+  const radius = 0.9;
+
+  const stepGeo = new THREE.BoxGeometry(0.7, 0.03, 0.22);
+  const stepMat = new THREE.MeshStandardMaterial({
+    color: 0xC9A84C,
+    metalness: 0.85,
+    roughness: 0.2
+  });
+
+  const centralPillar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, heightDiff, 8),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.4, roughness: 0.6 })
+  );
+  centralPillar.position.set(pivotX, startY + heightDiff/2, pivotZ);
+  group.add(centralPillar);
+
+  for (let i = 0; i < stepCount; i++) {
+    const step = new THREE.Mesh(stepGeo, stepMat);
+    const ratio = i / stepCount;
+    const angle = ratio * Math.PI * 1.5; // spiral 270 deg
+    
+    const sx = pivotX + Math.cos(angle) * (radius - 0.35);
+    const sy = startY + i * stepHeight + 0.015;
+    const sz = pivotZ + Math.sin(angle) * (radius - 0.35);
+
+    step.position.set(sx, sy, sz);
+    step.rotation.y = -angle;
+    step.castShadow = true;
+    step.receiveShadow = true;
+    group.add(step);
+  }
+  return group;
+}
+
+// ── Character & Mannequin Generator ──
+function createCharacter(x, y, z, rotY, isStaff = false) {
+  const group = new THREE.Group();
+  group.position.set(x, y, z);
+  group.rotation.y = rotY;
+
+  const standMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+  const goldBodyMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.9, roughness: 0.1 });
+  const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0a98c, roughness: 0.5 });
+  const suitMat = new THREE.MeshStandardMaterial({ color: 0x1c1d21, roughness: 0.7 });
+
+  // Stand base
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.03, 8), standMat);
+  base.position.y = 0.015;
+  group.add(base);
+
+  // Legs / Support rod
+  const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.55, 6), standMat);
+  legs.position.y = 0.28;
+  group.add(legs);
+
+  // Body (Capsule torso)
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.38, 4, 8), isStaff ? suitMat : goldBodyMat);
+  body.position.y = 0.75;
+  body.castShadow = true;
+  group.add(body);
+
+  // Head (Sphere)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), isStaff ? skinMat : goldBodyMat);
+  head.position.y = 1.02;
+  head.castShadow = true;
+  group.add(head);
+
+  if (isStaff) {
+    // Hair
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), new THREE.MeshStandardMaterial({ color: 0x221100, roughness: 0.8 }));
+    hair.position.set(0, 1.06, -0.01);
+    group.add(hair);
+
+    // Collar
+    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.04, 8), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    collar.position.y = 0.9;
+    group.add(collar);
+  }
+
+  return group;
+}
+
+// ── Clothing Rack Generator ──
+function createClothingRack(x, y, z, rotY, garmentColor) {
+  const group = new THREE.Group();
+  group.position.set(x, y, z);
+  group.rotation.y = rotY;
+
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0xC9A84C, metalness: 0.8, roughness: 0.2 });
+  const hangerMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.5, roughness: 0.5 });
+  const garmentMat = new THREE.MeshStandardMaterial({ color: garmentColor, roughness: 0.65 });
+
+  // Left Post
+  const leftPost = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.1, 8), frameMat);
+  leftPost.position.set(-0.7, 0.55, 0);
+  leftPost.castShadow = true;
+  group.add(leftPost);
+
+  // Right Post
+  const rightPost = leftPost.clone();
+  rightPost.position.set(0.7, 0.55, 0);
+  group.add(rightPost);
+
+  // Top Hanging Bar
+  const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.45, 8), frameMat);
+  topBar.rotation.z = Math.PI / 2;
+  topBar.position.set(0, 1.1, 0);
+  group.add(topBar);
+
+  // Base Bar
+  const baseBar = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.03, 0.16), frameMat);
+  baseBar.position.set(0, 0.015, 0);
+  group.add(baseBar);
+
+  // Hanging shirts
+  const numGarments = 5;
+  const sp = 1.1 / (numGarments - 1);
+  for (let i = 0; i < numGarments; i++) {
+    const gx = -0.55 + i * sp;
+    
+    // Hanger hook
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.004, 4, 8, Math.PI), hangerMat);
+    hook.position.set(gx, 1.085, 0);
+    hook.rotation.x = Math.PI / 2;
+    group.add(hook);
+
+    // Flat shirt volume
+    const shirt = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.65, 0.07), garmentMat);
+    shirt.position.set(gx, 0.72, 0);
+    shirt.castShadow = true;
+    shirt.receiveShadow = true;
+    group.add(shirt);
+  }
+
+  return group;
+}
+
+// ── Display Table Generator ──
+function createDisplayTable(x, y, z, rotY) {
+  const group = new THREE.Group();
+  group.position.set(x, y, z);
+  group.rotation.y = rotY;
+
+  const tableMat = new THREE.MeshStandardMaterial({ color: 0x1f1d1b, roughness: 0.5 });
+  const goldAcc = new THREE.MeshStandardMaterial({ color: 0xC9A84C, metalness: 0.8, roughness: 0.2 });
+
+  // Top
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.7), tableMat);
+  top.position.y = 0.45;
+  top.castShadow = true;
+  top.receiveShadow = true;
+  group.add(top);
+
+  // Legs
+  for (const lx of [-0.4, 0.4]) {
+    for (const lz of [-0.25, 0.25]) {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.45, 8), tableMat);
+      leg.position.set(lx, 0.225, lz);
+      leg.castShadow = true;
+      group.add(leg);
+    }
+  }
+
+  // Folded shirts on table
+  const fold1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.16), new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.8 }));
+  fold1.position.set(-0.2, 0.51, -0.08);
+  group.add(fold1);
+
+  const fold2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 0.16), new THREE.MeshStandardMaterial({ color: 0x1565c0, roughness: 0.8 }));
+  fold2.position.set(0.2, 0.5, 0.08);
+  group.add(fold2);
+
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), goldAcc);
+  orb.position.set(0, 0.51, 0);
+  group.add(orb);
+
+  return group;
+}
+
+// ── Populate Building Interiors Floor-by-Floor ──
+
+// Winding Staircases connecting levels
+const stairs1 = createStaircase(0.04, FLOOR_H, -2.8, 0);
+building.add(stairs1);
+const stairs2 = createStaircase(FLOOR_H + 0.04, FLOOR_H * 2, -2.8, 0);
+building.add(stairs2);
+const stairs3 = createStaircase(FLOOR_H * 2 + 0.04, FLOOR_H * 3, -2.8, 0);
+building.add(stairs3);
+const stairs4 = createStaircase(FLOOR_H * 3 + 0.04, FLOOR_H * 4, -2.8, 0);
+building.add(stairs4);
+
+// FLOOR 0: Earth Positive Flagship (Ground retail entrance area)
+const staffG = createCharacter(0, 0.04, 0.8, Math.PI, true);
+building.add(staffG);
+const tableG = createDisplayTable(1.8, 0.04, -1.0, Math.PI / 6);
+building.add(tableG);
+const manG1 = createCharacter(-1.8, 0.04, D/2 - 0.8, Math.PI / 4, false);
+building.add(manG1);
+const manG2 = createCharacter(1.8, 0.04, D/2 - 0.8, -Math.PI / 4, false);
+building.add(manG2);
+
+// FLOOR 1: Grand Lobby (Reception & Lounge seating)
+const receptionDesk = new THREE.Mesh(
+  new THREE.BoxGeometry(1.5, 0.8, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.5 })
+);
+receptionDesk.position.set(0, FLOOR_H + 0.4, 0.4);
+building.add(receptionDesk);
+const receptionTrim = new THREE.Mesh(
+  new THREE.BoxGeometry(1.55, 0.04, 0.55),
+  new THREE.MeshStandardMaterial({ color: 0xC9A84C, metalness: 0.8, roughness: 0.2 })
+);
+receptionTrim.position.set(0, FLOOR_H + 0.82, 0.4);
+building.add(receptionTrim);
+
+// Lobby staff
+const receptionDeskStaff = createCharacter(0, FLOOR_H + 0.04, 0.0, 0, true);
+building.add(receptionDeskStaff);
+
+const sofaL = new THREE.Mesh(
+  new THREE.BoxGeometry(0.5, 0.4, 1.2),
+  new THREE.MeshStandardMaterial({ color: 0x151618, roughness: 0.6 })
+);
+sofaL.position.set(-2.0, FLOOR_H + 0.2, -1.0);
+building.add(sofaL);
+
+const sofaR = sofaL.clone();
+sofaR.position.set(2.0, FLOOR_H + 0.2, -1.0);
+building.add(sofaR);
+
+// FLOOR 2: T-Shirts Atelier
+const rackT1 = createClothingRack(-1.6, FLOOR_H * 2 + 0.04, -1.0, 0, 0xe53935);
+building.add(rackT1);
+const rackT2 = createClothingRack(1.6, FLOOR_H * 2 + 0.04, -1.0, 0, 0x222222);
+building.add(rackT2);
+const tableT = createDisplayTable(0, FLOOR_H * 2 + 0.04, 1.0, 0);
+building.add(tableT);
+const mannequinT = createCharacter(0, FLOOR_H * 2 + 0.04, -0.2, 0, false);
+building.add(mannequinT);
+
+// FLOOR 3: Hoodies & Sweatstreet
+const rackH1 = createClothingRack(-1.6, FLOOR_H * 3 + 0.04, -1.0, 0, 0x1b5e20);
+building.add(rackH1);
+const rackH2 = createClothingRack(1.6, FLOOR_H * 3 + 0.04, -1.0, 0, 0xffa000);
+building.add(rackH2);
+const mannequinH1 = createCharacter(-0.6, FLOOR_H * 3 + 0.04, 0.8, Math.PI / 8, false);
+building.add(mannequinH1);
+const mannequinH2 = createCharacter(0.6, FLOOR_H * 3 + 0.04, 0.8, -Math.PI / 8, false);
+building.add(mannequinH2);
+
+// ROOFTOP / PENTHOUSE LOUNGE
+const loungeChairL = new THREE.Mesh(
+  new THREE.BoxGeometry(0.6, 0.35, 1.0),
+  new THREE.MeshStandardMaterial({ color: 0xc9a84c, metalness: 0.6, roughness: 0.3 })
+);
+loungeChairL.position.set(-1.6, NUM_FLOORS * FLOOR_H + 0.18, 0);
+building.add(loungeChairL);
+const loungeChairR = loungeChairL.clone();
+loungeChairR.position.set(1.6, NUM_FLOORS * FLOOR_H + 0.18, 0);
+building.add(loungeChairR);
+
+const loungeTable = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.3, 0.3, 0.35, 10),
+  new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 })
+);
+loungeTable.position.set(0, NUM_FLOORS * FLOOR_H + 0.175, -0.8);
+building.add(loungeTable);
 
 // ── Decorative Gold Rings (Floating Displays) ──
 function createGoldRingDisplay(y, color, posX, posZ) {
