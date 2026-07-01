@@ -1028,6 +1028,7 @@ function makePropHotspot(name, desc, x, y, z) {
     btn.classList.remove('active');
   });
 
+  container.style.display = 'none';
   const obj = new CSS2DObject(container);
   obj.position.set(x, y, z);
   return obj;
@@ -1057,6 +1058,7 @@ function makeNavHotspot(targetFloor, text, x, y, z) {
     goToInteriorFloor(targetFloor);
   });
 
+  btn.style.display = 'none';
   const obj = new CSS2DObject(btn);
   obj.position.set(x, y, z);
   return obj;
