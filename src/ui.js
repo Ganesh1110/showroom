@@ -10,7 +10,6 @@ const SVG_ICONS = {
 };
 
 export function showToast(message) {
-  // Remove existing toasts first
   const existing = document.querySelectorAll('.custom-toast');
   existing.forEach(t => t.remove());
 
@@ -20,16 +19,37 @@ export function showToast(message) {
 
   document.body.appendChild(toast);
 
-  // Animate in via class addition (CSS transitions handled in style.css)
   setTimeout(() => {
     toast.classList.add('visible');
   }, 30);
 
-  // Fade out
   setTimeout(() => {
     toast.classList.remove('visible');
     setTimeout(() => toast.remove(), 400);
   }, 2200);
+}
+
+// Trap focus inside modal containers for screen reader / keyboard accessibility
+export function trapFocus(element) {
+  element.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const focusableEls = element.querySelectorAll('button, [href], input, select, textarea, [tabindex="0"]');
+    if (focusableEls.length === 0) return;
+    const firstFocusable = focusableEls[0];
+    const lastFocusable = focusableEls[focusableEls.length - 1];
+
+    if (e.shiftKey) { // Shift + Tab
+      if (document.activeElement === firstFocusable) {
+        lastFocusable.focus();
+        e.preventDefault();
+      }
+    } else { // Tab
+      if (document.activeElement === lastFocusable) {
+        firstFocusable.focus();
+        e.preventDefault();
+      }
+    }
+  });
 }
 
 // Wishlist Counter state
@@ -37,6 +57,24 @@ let wishlistCount = 0;
 export function initEcommerceBindings(onViewDetailsClick) {
   const primaryCTA = document.querySelector('.product-panel-btn.primary');
   const secondaryCTA = document.querySelector('.product-panel-btn.secondary');
+  const productPanel = document.getElementById('product-panel');
+  const closeBtn = document.getElementById('product-panel-close');
+
+  if (productPanel) {
+    trapFocus(productPanel);
+  }
+
+  if (closeBtn && productPanel) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      productPanel.classList.add('product-panel-hidden');
+      const activeHotspot = document.querySelector('.prop-hotspot-btn.active');
+      if (activeHotspot) {
+        activeHotspot.focus();
+        activeHotspot.classList.remove('active');
+      }
+    });
+  }
 
   if (primaryCTA) {
     primaryCTA.addEventListener('click', (e) => {
@@ -75,6 +113,10 @@ let currentStep = 1;
 export function initTutorialBindings() {
   const tutorialOverlay = document.getElementById('tutorial-overlay');
   const nextBtn = document.getElementById('tutorial-next-btn');
+
+  if (tutorialOverlay) {
+    trapFocus(tutorialOverlay);
+  }
 
   if (nextBtn) {
     nextBtn.addEventListener('click', (e) => {

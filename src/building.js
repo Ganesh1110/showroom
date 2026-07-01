@@ -2,9 +2,22 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { MAT } from './materials.js';
 import { FLOOR_H } from './constants.js';
+import { createFabricTexture } from './textures.js';
 
 export const mannequinTorsos = [];
 export const mannequinHeads = [];
+
+const fabricCache = new Map();
+function getCachedFabric(hexColor) {
+  if (!fabricCache.has(hexColor)) {
+    const hexStr = '#' + new THREE.Color(hexColor).getHexString();
+    fabricCache.set(hexColor, new THREE.MeshStandardMaterial({
+      map: createFabricTexture(hexStr),
+      roughness: 0.85
+    }));
+  }
+  return fabricCache.get(hexColor);
+}
 
 export function makeCSSLabel(text, styles = {}) {
   const div = document.createElement('div');
@@ -48,7 +61,7 @@ export function makeClothingRack(x, y, z, rotY, colors = [0x222222, 0x993333, 0x
     const gx = -0.5 + (i / (colors.length - 1)) * 1.0;
     const garment = new THREE.Mesh(
       new THREE.BoxGeometry(0.18, 0.7, 0.06),
-      new THREE.MeshStandardMaterial({ color: colors[i], roughness: 0.7 })
+      getCachedFabric(colors[i])
     );
     garment.position.set(gx, 0.69, 0);
     g.add(garment);
@@ -64,8 +77,7 @@ export function makeMannequin(x, y, z, rotY, garmentColor = 0x222222) {
   base.position.y = 0.02; g.add(base);
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.6, 8), MAT.steelDark);
   pole.position.y = 0.32; g.add(pole);
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.42, 4, 10),
-    new THREE.MeshStandardMaterial({ color: garmentColor, roughness: 0.6 }));
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.14, 0.42, 4, 10), getCachedFabric(garmentColor));
   torso.position.y = 0.88; g.add(torso);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 12), MAT.concDark);
   head.position.y = 1.18; g.add(head);
@@ -81,8 +93,7 @@ export function makeStaffMember(x, y, z, rotY) {
   const g = new THREE.Group();
   g.position.set(x, y, z);
   g.rotation.y = rotY;
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.4, 4, 8),
-    new THREE.MeshStandardMaterial({ color: 0x18181e, roughness: 0.7 }));
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.4, 4, 8), MAT.steelDark);
   body.position.y = 0.78; g.add(body);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10),
     new THREE.MeshStandardMaterial({ color: 0xd4a07a, roughness: 0.5 }));
@@ -107,11 +118,9 @@ export function makeDisplayTable(x, y, z, rotY) {
     leg.position.set(lx, 0.22, lz); g.add(leg);
   }
   // Items on table
-  const item1 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.16),
-    new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.8 }));
+  const item1 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.16), getCachedFabric(0xc62828));
   item1.position.set(-0.2, 0.51, -0.08); g.add(item1);
-  const item2 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.16),
-    new THREE.MeshStandardMaterial({ color: 0x1a237e, roughness: 0.8 }));
+  const item2 = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.16), getCachedFabric(0x1a237e));
   item2.position.set(0.22, 0.5, 0.08); g.add(item2);
   return g;
 }
@@ -172,7 +181,7 @@ export function makeLoungeSofa(x, y, z, rotY) {
   // Sofa base
   const sofaBase = new THREE.Mesh(
     new THREE.BoxGeometry(1.5, 0.36, 0.65),
-    new THREE.MeshStandardMaterial({ color: 0xdad5cd, roughness: 0.9 })
+    MAT.fabricSofa
   );
   sofaBase.position.set(0, 0.18, 0);
   sofaBase.castShadow = true;
@@ -181,7 +190,7 @@ export function makeLoungeSofa(x, y, z, rotY) {
   // Sofa back
   const sofaBack = new THREE.Mesh(
     new THREE.BoxGeometry(1.5, 0.46, 0.15),
-    new THREE.MeshStandardMaterial({ color: 0xdad5cd, roughness: 0.9 })
+    MAT.fabricSofa
   );
   sofaBack.position.set(0, 0.48, -0.25);
   sofaBack.castShadow = true;
@@ -190,11 +199,11 @@ export function makeLoungeSofa(x, y, z, rotY) {
   // Seated Person (sitting mannequin style)
   const person = new THREE.Group();
   person.position.set(0.15, 0.2, 0.0);
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.3, 4, 8), new THREE.MeshStandardMaterial({ color: 0xaecbe6, roughness: 0.7 }));
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.3, 4, 8), getCachedFabric(0xaecbe6));
   body.position.y = 0.28;
   body.castShadow = true;
   person.add(body);
-  const thighs = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.11, 0.35), new THREE.MeshStandardMaterial({ color: 0xdad5cd, roughness: 0.7 }));
+  const thighs = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.11, 0.35), MAT.fabricSofa);
   thighs.position.set(0, 0.16, 0.16);
   thighs.castShadow = true;
   person.add(thighs);
@@ -256,7 +265,7 @@ export function makeHangingRack(x, y, z, rotY, colors = [0x222222, 0x993333, 0x3
     const gx = -0.5 + (i / (colors.length - 1)) * 1.0;
     const garment = new THREE.Mesh(
       new THREE.BoxGeometry(0.18, 0.65, 0.04),
-      new THREE.MeshStandardMaterial({ color: colors[i], roughness: 0.85 })
+      getCachedFabric(colors[i])
     );
     garment.position.set(gx, FLOOR_H - rodLen - 0.34, 0);
     g.add(garment);
@@ -381,28 +390,5 @@ export function makePartitionWall(x, y, z, rotY, color = 0x2a3d4a) {
   wall.castShadow = true;
   g.add(wall);
 
-  return g;
-}
-
-export function makeThinTree(x, z, h = 2.8) {
-  const g = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.04, 0.06, h, 6),
-    new THREE.MeshStandardMaterial({ color: 0x2a2218, roughness: 0.9 })
-  );
-  trunk.position.y = h / 2; g.add(trunk);
-  
-  // Layered canopy
-  for (let i = 0; i < 3; i++) {
-    const r = 0.45 - i * 0.1;
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(r, 0.8, 8),
-      new THREE.MeshStandardMaterial({ color: 0x1a2e1a, roughness: 0.9 })
-    );
-    cone.position.y = h * 0.65 + i * 0.45;
-    cone.castShadow = true;
-    g.add(cone);
-  }
-  g.position.set(x, 0, z);
   return g;
 }

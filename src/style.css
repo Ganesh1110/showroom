@@ -188,7 +188,7 @@ canvas { display: block; }
   pointer-events: auto;
 }
 
-#daynight-toggle {
+#daynight-toggle, #bloom-toggle {
   background: rgba(0,0,0,0.7);
   border: 1px solid rgba(201,168,76,0.3);
   color: var(--gold);
@@ -204,10 +204,10 @@ canvas { display: block; }
   transition: all 0.3s ease;
   display: none;
 }
-#daynight-toggle.visible {
+#daynight-toggle.visible, #bloom-toggle.visible {
   display: flex; align-items: center; justify-content: center;
 }
-#daynight-toggle:hover {
+#daynight-toggle:hover, #bloom-toggle:hover {
   background: rgba(201,168,76,0.15);
   border-color: var(--gold);
   box-shadow: 0 0 20px rgba(201,168,76,0.15);
@@ -778,6 +778,22 @@ canvas { display: block; }
     display: none;
   }
   #nav-dots {
+    display: flex !important;
+    flex-direction: row !important;
+    position: fixed !important;
+    bottom: 2rem !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    transform: translateX(-50%) !important;
+    gap: 0.6rem !important;
+    background: rgba(0,0,0,0.82) !important;
+    border: 1px solid rgba(251,215,110,0.2) !important;
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 20px !important;
+    z-index: 30 !important;
+  }
+  #nav-dots .dot-label {
     display: none !important;
   }
   #header {

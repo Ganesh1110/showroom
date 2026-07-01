@@ -40,13 +40,7 @@
         <div class="sug-item" data-val="Accessories Collection" role="option">Accessories Suite</div>
       </div>
     </div>
-    <!-- Music Mute/Unmute -->
-    <button id="music-toggle" aria-label="Toggle Background Music">
-      <svg class="music-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:middle">
-        <path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/>
-      </svg>
-      <span id="music-status-text">PLAY AMBIENT</span>
-    </button>
+
     <!-- Wishlist Counter Badge -->
     <div id="wishlist-btn" class="wishlist-btn" aria-label="Wishlist items">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:5px;vertical-align:middle;color:#ff3366">
@@ -66,6 +60,9 @@
 
 <!-- Day/Night & Exit action cluster -->
 <div id="top-left-actions">
+  <button id="bloom-toggle" aria-label="Toggle Bloom Performance" style="display:none">
+    <span id="bloom-icon" style="margin-right:5px">⚡</span><span id="bloom-text">BLOOM ON</span>
+  </button>
   <button id="daynight-toggle" aria-label="Toggle Lighting Mode">
     <span id="daynight-icon" style="margin-right:5px">🌙</span><span id="daynight-text">NIGHT MODE</span>
   </button>

@@ -9,7 +9,7 @@ import gsap from 'gsap';
 
 import { W, D, FLOOR_H, NUM_FLOORS, FLOORS, CAM, PROP_DATABASE, SEARCH_FOCUS } from './constants.js';
 import { screenShaderMat, skyMat, lobbyParticleMat } from './shaders.js';
-import { MAT } from './materials.js';
+import { MAT, hoverMaterialsMap } from './materials.js';
 import {
   makeCSSLabel,
   makeClothingRack,
@@ -24,11 +24,11 @@ import {
   makeShelvingOrganizer,
   makeBigPottedPlant,
   makePartitionWall,
-  makeThinTree,
+
   mannequinHeads,
   mannequinTorsos
 } from './building.js';
-import { startAmbientAudio } from './audio.js';
+
 import {
   showToast,
   initEcommerceBindings,
@@ -45,6 +45,12 @@ let currentInteriorFloor = 0;
 let animating = false;
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+const initHint = document.getElementById('hint');
+if (initHint && isTouchDevice) {
+  initHint.textContent = 'Touch & Drag to Orbit · Pinch to Zoom · Tap Door to Enter';
+}
 
 // ─────────────────────────────────────────────────
 //  RENDERER
@@ -70,12 +76,7 @@ document.body.prepend(labelRenderer.domElement);
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x0a0a18, 0.006);
 
-// City skyline background (loads cleanly from public/)
-const bgLoader = new THREE.TextureLoader();
-bgLoader.load('/city_skyline.jpg', (tex) => {
-  tex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = tex;
-});
+scene.background = new THREE.Color(0x0a0a18);
 
 // ─────────────────────────────────────────────────
 //  CAMERA & CONTROLS
@@ -100,11 +101,13 @@ const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
+const isMobileDevice = window.innerWidth <= 768 || ('ontouchstart' in window);
+const initialBloomStrength = isMobileDevice ? 0.15 : 0.65;
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.65, // strength
-  0.4,  // radius
-  0.65  // threshold
+  initialBloomStrength,
+  isMobileDevice ? 0.1 : 0.4,
+  0.65
 );
 composer.addPass(bloomPass);
 
@@ -693,7 +696,11 @@ function makePropHotspot(name, desc, x, y, z) {
     updateProductPanelIcon(details.icon);
 
     const panel = document.getElementById('product-panel');
-    panel.classList.remove('product-panel-hidden');
+    if (panel) {
+      panel.classList.remove('product-panel-hidden');
+      const closeBtn = document.getElementById('product-panel-close');
+      if (closeBtn) closeBtn.focus();
+    }
   });
 
   btn.style.display = 'none';
@@ -858,17 +865,22 @@ function enterBuilding() {
       const backBtn = document.getElementById('back-btn');
       const floorInfoEl = document.getElementById('floor-info');
       const dn = document.getElementById('daynight-toggle');
+      const bl = document.getElementById('bloom-toggle');
 
       if (enterDiv) enterDiv.style.display = 'none';
       if (navDots) navDots.style.display = 'none';
-      if (hintEl) hintEl.textContent = 'Drag to explore · Scroll to zoom · ← → to change floors';
+      if (hintEl) {
+        hintEl.textContent = isTouchDevice ?
+          'Touch & Drag to explore · Pinch to zoom · Arrow HUD buttons to change floors' :
+          'Drag to explore · Scroll to zoom · ← → to change floors';
+      }
       if (backBtn) backBtn.classList.add('visible');
       if (dn) dn.classList.add('visible');
+      if (bl) bl.classList.add('visible');
       if (interiorHUD) interiorHUD.classList.add('visible');
       if (floorInfoEl) floorInfoEl.classList.remove('visible');
 
-      // Start procedural audio on first enter
-      startAmbientAudio();
+
 
       // Trigger tutorial modal
       const hasVisited = localStorage.getItem('visitedShowroom');
@@ -927,12 +939,18 @@ function exitBuilding() {
       const hintEl = document.getElementById('hint');
       const backBtn = document.getElementById('back-btn');
       const dn = document.getElementById('daynight-toggle');
+      const bl = document.getElementById('bloom-toggle');
 
       if (enterDiv) enterDiv.style.display = 'flex';
       if (navDots) navDots.style.display = 'flex';
-      if (hintEl) hintEl.textContent = 'Drag to Orbit · Scroll to Zoom · Click Door to Enter';
+      if (hintEl) {
+        hintEl.textContent = isTouchDevice ?
+          'Touch & Drag to Orbit · Pinch to Zoom · Tap Door to Enter' :
+          'Drag to Orbit · Scroll to Zoom · Click Door to Enter';
+      }
       if (backBtn) backBtn.classList.remove('visible');
       if (dn) dn.classList.remove('visible');
+      if (bl) bl.classList.remove('visible');
       if (interiorHUD) interiorHUD.classList.remove('visible');
 
       updateFloorVisibility(0);
@@ -1022,6 +1040,35 @@ if (backBtn) {
   backBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     exitBuilding();
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  ⚡ BLOOM POST-PROCESSING PERFORMANCE TOGGLE
+// ─────────────────────────────────────────────────
+const bloomToggleBtn = document.getElementById('bloom-toggle');
+const bloomIcon = document.getElementById('bloom-icon');
+const bloomText = document.getElementById('bloom-text');
+
+if (bloomToggleBtn) {
+  if (bloomIcon && bloomText) {
+    bloomIcon.textContent = initialBloomStrength > 0 ? '⚡' : '⚪';
+    bloomText.textContent = initialBloomStrength > 0 ? 'BLOOM ON' : 'BLOOM OFF';
+  }
+
+  bloomToggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (bloomPass.strength > 0) {
+      bloomPass.strength = 0;
+      if (bloomIcon) bloomIcon.textContent = '⚪';
+      if (bloomText) bloomText.textContent = 'BLOOM OFF';
+      showToast('Bloom disabled (high performance)');
+    } else {
+      bloomPass.strength = isMobileDevice ? 0.15 : 0.65;
+      if (bloomIcon) bloomIcon.textContent = '⚡';
+      if (bloomText) bloomText.textContent = 'BLOOM ON';
+      showToast('Bloom enabled (cinematic quality)');
+    }
   });
 }
 
@@ -1158,15 +1205,26 @@ function triggerFocusAnim(config, name) {
 }
 
 // ─────────────────────────────────────────────────
-//  INTERACTIVE HOVER GLOW (Raycasting on Cloned Material)
+//  INTERACTIVE HOVER GLOW (Raycasting on Pre-allocated Materials)
 // ─────────────────────────────────────────────────
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let hoveredObject = null;
+let pointerMoved = false;
 
 window.addEventListener('pointermove', (event) => {
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  pointerMoved = true;
+});
+
+// Also support touch moves for mobile raycasting
+window.addEventListener('touchmove', (event) => {
+  if (event.touches.length > 0) {
+    mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+    pointerMoved = true;
+  }
 });
 
 function checkRaycast() {
@@ -1202,10 +1260,10 @@ function checkRaycast() {
       }
       hoveredObject = obj;
       if (obj.material) {
-        obj.savedMaterial = obj.material;
-        obj.material = obj.material.clone();
-        if (obj.material.emissive) {
-          obj.material.emissive.setHex(0x2d240c); // subtle gold highlight
+        const hoverMat = hoverMaterialsMap.get(obj.material);
+        if (hoverMat) {
+          obj.savedMaterial = obj.material;
+          obj.material = hoverMat;
         }
       }
     }
@@ -1276,7 +1334,13 @@ function animate() {
   if (typeof lobbyParticleMat !== 'undefined') lobbyParticleMat.uniforms.uTime.value = t;
   if (typeof chandelierGroup !== 'undefined') chandelierGroup.rotation.y = t * 0.12;
 
-  checkRaycast();
+  if (pointerMoved) {
+    checkRaycast();
+    pointerMoved = false;
+  }
+
+  // Prevent camera from clipping through floor, ceilings, or walls
+  applyCollisionDetection();
 
   controls.update();
 
@@ -1284,17 +1348,33 @@ function animate() {
   labelRenderer.render(scene, camera);
 }
 
+function applyCollisionDetection() {
+  if (!isInside || animating) return;
+  const halfW = W / 2 - 0.65;
+  const halfD = D / 2 - 0.65;
+  camera.position.x = Math.max(-halfW, Math.min(halfW, camera.position.x));
+  camera.position.z = Math.max(-halfD, Math.min(halfD, camera.position.z));
+  
+  const floorMinY = currentInteriorFloor * FLOOR_H + 0.22;
+  const floorMaxY = (currentInteriorFloor + 1) * FLOOR_H - 0.22;
+  camera.position.y = Math.max(floorMinY, Math.min(floorMaxY, camera.position.y));
+}
+
 animate();
 
 // ─────────────────────────────────────────────────
 //  RESIZE
 // ─────────────────────────────────────────────────
+let resizeTimeout;
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-  labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+  }, 150);
 });
 
 // ─────────────────────────────────────────────────
