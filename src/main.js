@@ -993,6 +993,75 @@ const lobbyParticleMat = new THREE.ShaderMaterial({
 const lobbyParticles = new THREE.Points(lobbyParticleGeo, lobbyParticleMat);
 lobby.add(lobbyParticles);
 
+// Lobby Floor hotspots
+const lobbyHotspots = new THREE.Group();
+lobby.add(lobbyHotspots);
+lobbyHotspots.add(makeNavHotspot(1, 'Go to 1F ↗', -3.2, 0.9, -1.8));
+lobbyHotspots.add(makePropHotspot('Tomo Koizumi Gown', 'Fluffy ruffled rainbow dress made of layered colored tulle.', 3.4, 1.3, -0.4));
+lobbyHotspots.add(makePropHotspot('Hirume Bonsai', 'Traditional Japanese Bonsai tree representing natural beauty.', -2.8, 0.7, -0.4));
+lobbyHotspots.add(makePropHotspot('Rod Chandelier', 'Contemporary vertical tube rod chandelier with glow bloom.', 0, 2.3, 0));
+
+// ── Hotspot generator functions ──
+function makePropHotspot(name, desc, x, y, z) {
+  const container = document.createElement('div');
+  container.style.position = 'relative';
+
+  const btn = document.createElement('button');
+  btn.className = 'prop-hotspot-btn';
+  btn.textContent = '+';
+
+  const popup = document.createElement('div');
+  popup.className = 'prop-hotspot-popup';
+  popup.innerHTML = `<strong>${name}</strong><br/>${desc}`;
+
+  btn.appendChild(popup);
+  container.appendChild(btn);
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isActive = btn.classList.contains('active');
+    document.querySelectorAll('.prop-hotspot-btn').forEach(b => b.classList.remove('active'));
+    if (!isActive) btn.classList.add('active');
+  });
+
+  document.addEventListener('click', () => {
+    btn.classList.remove('active');
+  });
+
+  const obj = new CSS2DObject(container);
+  obj.position.set(x, y, z);
+  return obj;
+}
+
+function makeNavHotspot(targetFloor, text, x, y, z) {
+  const btn = document.createElement('button');
+  btn.className = 'nav-hotspot-btn';
+  btn.innerHTML = `<svg width="9" height="9" viewBox="0 0 10 10" fill="none" style="margin-right:5px;vertical-align:middle"><path d="M2 8L8 2M8 2H4M8 2V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>${text}`;
+  Object.assign(btn.style, {
+    fontFamily: '"Inter", sans-serif',
+    fontSize: '9px', fontWeight: '600',
+    letterSpacing: '0.15em',
+    color: '#F5D76E',
+    padding: '6px 12px',
+    background: 'rgba(0,0,0,0.85)',
+    border: '1px solid rgba(201,168,76,0.3)',
+    borderRadius: '2px',
+    cursor: 'pointer',
+    pointerEvents: 'auto',
+    whiteSpace: 'nowrap',
+    textTransform: 'uppercase',
+  });
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    goToInteriorFloor(targetFloor);
+  });
+
+  const obj = new CSS2DObject(btn);
+  obj.position.set(x, y, z);
+  return obj;
+}
+
 // ── Boutique Asset Helper Functions ──
 function makeLoungeSofa(x, y, z, rotY) {
   const g = new THREE.Group();
@@ -1217,11 +1286,11 @@ tShirtFloor.position.y = FLOOR_H;
 building.add(tShirtFloor);
 
 // Background partition
-tShirtFloor.add(makePartitionWall(2.5, 0.02, -1.8, Math.PI / 1.1, 0x2b3d4a)); // navy backdrop
+tShirtFloor.add(makePartitionWall(2.5, 0.02, -1.8, Math.PI / 1.1, 0x2b3d4a));
 
 // Racks
-tShirtFloor.add(makeHangingRack(0, 0.02, -1.8, 0, [0x43a047, 0x1e88e5, 0xe53935])); // hanging rack center
-tShirtFloor.add(makeClothingRack(-2.5, 0.02, -1.6, 0, [0xffffff, 0x888888, 0x333333])); // standing rack left
+tShirtFloor.add(makeHangingRack(0, 0.02, -1.8, 0, [0x43a047, 0x1e88e5, 0xe53935]));
+tShirtFloor.add(makeClothingRack(-2.5, 0.02, -1.6, 0, [0xffffff, 0x888888, 0x333333]));
 
 // Sofa & Table Lounge
 tShirtFloor.add(makeLoungeSofa(2.6, 0.02, 1.2, -Math.PI / 1.4));
@@ -1236,17 +1305,26 @@ tShirtFloor.add(makeMannequin(-1.3, 0.02, 1.0, Math.PI * 0.15, 0x333333));
 tShirtFloor.add(makeMannequin(0.7, 0.02, 1.1, -Math.PI * 0.1, 0xe53935));
 tShirtFloor.add(makeStaffMember(3.8, 0.02, 0.4, -Math.PI / 2));
 
+// Floor 1 Hotspots
+const tShirtHotspots = new THREE.Group();
+tShirtFloor.add(tShirtHotspots);
+tShirtHotspots.add(makeNavHotspot(2, 'Go to 2F ↗', -3.2, 0.9, -1.8));
+tShirtHotspots.add(makeNavHotspot(0, 'Go to Lobby ↙', -4.5, 0.9, -2.4));
+tShirtHotspots.add(makePropHotspot('Lounge Sofa', 'Fabric designer sofa and marble coffee table.', 2.6, 0.6, 1.2));
+tShirtHotspots.add(makePropHotspot('Organic Tees', 'Premium lightweight organic cotton t-shirts.', 0, 1.2, -1.8));
+tShirtHotspots.add(makePropHotspot('Organizer Stand', 'Black metal clothing shelf with boxes, cap, and pack.', -2.8, 1.0, -0.3));
+
 // ── FLOOR 2 — Hoodies ──
 const hoodieFloor = new THREE.Group();
 hoodieFloor.position.y = FLOOR_H * 2;
 building.add(hoodieFloor);
 
 // Cozy warm tone partition
-hoodieFloor.add(makePartitionWall(2.5, 0.02, -1.8, Math.PI / 1.1, 0x51483e)); // charcoal/warm brown
+hoodieFloor.add(makePartitionWall(2.5, 0.02, -1.8, Math.PI / 1.1, 0x51483e));
 
 // Hoodie sections
-hoodieFloor.add(makeHangingRack(0, 0.02, -1.8, 0, [0x3e2723, 0x4e342e, 0xbdbdbd])); // hanging rack center
-hoodieFloor.add(makeClothingRack(-2.5, 0.02, -1.6, 0, [0x1b5e20, 0x004d40, 0x212121])); // standing rack left
+hoodieFloor.add(makeHangingRack(0, 0.02, -1.8, 0, [0x3e2723, 0x4e342e, 0xbdbdbd]));
+hoodieFloor.add(makeClothingRack(-2.5, 0.02, -1.6, 0, [0x1b5e20, 0x004d40, 0x212121]));
 
 // Sofa Lounge, Mirror, Shelf & Plant
 hoodieFloor.add(makeLoungeSofa(2.6, 0.02, 1.2, -Math.PI / 1.4));
@@ -1259,17 +1337,25 @@ hoodieFloor.add(makeMannequin(-1.3, 0.02, 1.0, Math.PI * 0.15, 0x212121));
 hoodieFloor.add(makeMannequin(0.7, 0.02, 1.1, -Math.PI * 0.1, 0x880e4f));
 hoodieFloor.add(makeStaffMember(3.8, 0.02, 0.4, -Math.PI / 2));
 
+// Floor 2 Hotspots
+const hoodieHotspots = new THREE.Group();
+hoodieFloor.add(hoodieHotspots);
+hoodieHotspots.add(makeNavHotspot(3, 'Go to 3F ↗', -3.2, 0.9, -1.8));
+hoodieHotspots.add(makeNavHotspot(1, 'Go to 1F ↙', -4.5, 0.9, -2.4));
+hoodieHotspots.add(makePropHotspot('Lounge Sofa', 'Fabric designer sofa and marble coffee table.', 2.6, 0.6, 1.2));
+hoodieHotspots.add(makePropHotspot('Organic Hoodies', 'Comfortable organic cotton hoodies and jackets.', 0, 1.2, -1.8));
+
 // ── FLOOR 3 — Accessories ──
 const accFloor = new THREE.Group();
 accFloor.position.y = FLOOR_H * 3;
 building.add(accFloor);
 
 // Cream tone partition wall
-accFloor.add(makePartitionWall(2.5, 0.02, -1.8, Math.PI / 1.1, 0xd4cbae)); // marble cream
+accFloor.add(makePartitionWall(2.5, 0.02, -1.8, Math.PI / 1.1, 0xd4cbae));
 
 // Racks (totes and accessories)
-accFloor.add(makeHangingRack(0, 0.02, -1.8, 0, [0xC9A84C, 0xdadcd0, 0x2b2b2b])); // suspended rack center
-accFloor.add(makeClothingRack(-2.5, 0.02, -1.6, 0, [0xeeeeee, 0x888888, 0x111111])); // standing rack left
+accFloor.add(makeHangingRack(0, 0.02, -1.8, 0, [0xC9A84C, 0xdadcd0, 0x2b2b2b]));
+accFloor.add(makeClothingRack(-2.5, 0.02, -1.6, 0, [0xeeeeee, 0x888888, 0x111111]));
 
 // Lounge Sofa, Mirror, Organizer Shelf & Plant
 accFloor.add(makeLoungeSofa(2.6, 0.02, 1.2, -Math.PI / 1.4));
@@ -1281,6 +1367,13 @@ accFloor.add(makeBigPottedPlant(-3.1, 0.02, 1.4));
 accFloor.add(makeMannequin(-1.3, 0.02, 1.0, Math.PI * 0.15, 0xC9A84C));
 accFloor.add(makeMannequin(0.7, 0.02, 1.1, -Math.PI * 0.1, 0x222226));
 accFloor.add(makeStaffMember(3.8, 0.02, 0.4, -Math.PI / 2));
+
+// Floor 3 Hotspots
+const accHotspots = new THREE.Group();
+accFloor.add(accHotspots);
+accHotspots.add(makeNavHotspot(2, 'Go to 2F ↙', -4.5, 0.9, -2.4));
+accHotspots.add(makePropHotspot('Lounge Sofa', 'Fabric designer sofa and marble coffee table.', 2.6, 0.6, 1.2));
+accHotspots.add(makePropHotspot('Accessories Collection', 'Premium caps, canvas totes, and daily accessories.', 0, 1.2, -1.8));
 
 // ── STAIRCASES (spiral) ──
 for (let floor = 0; floor < NUM_FLOORS - 1; floor++) {
@@ -1574,33 +1667,136 @@ function exitBuilding() {
       hintEl.textContent = 'Drag to Orbit · Scroll to Zoom · Click Door to Enter';
       backBtn.classList.remove('visible');
       interiorHUD.classList.remove('visible');
+
+      // Hide all interior hotspots in exterior view
+      toggleCSS2DVisibility(typeof lobbyHotspots !== 'undefined' ? lobbyHotspots : null, false);
+      toggleCSS2DVisibility(typeof tShirtHotspots !== 'undefined' ? tShirtHotspots : null, false);
+      toggleCSS2DVisibility(typeof hoodieHotspots !== 'undefined' ? hoodieHotspots : null, false);
+      toggleCSS2DVisibility(typeof accHotspots !== 'undefined' ? accHotspots : null, false);
+
       animating = false;
     }
   });
 }
 
 // ─────────────────────────────────────────────────
-//  CHANGE INTERIOR FLOOR (smooth GSAP)
+//  CHANGE INTERIOR FLOOR (smooth GSAP spiral stairs climb)
 // ─────────────────────────────────────────────────
 function goToInteriorFloor(idx) {
   if (!isInside || animating || idx === currentInteriorFloor) return;
   animating = true;
 
-  const f = CAM.floors[idx];
-  gsap.to(camera.position, {
-    x: f.pos.x, y: f.pos.y, z: f.pos.z,
-    duration: 1.4, ease: 'power3.inOut',
-    onUpdate: () => controls.update()
-  });
-  gsap.to(controls.target, {
-    x: f.target.x, y: f.target.y, z: f.target.z,
-    duration: 1.4, ease: 'power3.inOut',
-    onUpdate: () => controls.update(),
-    onComplete: () => { animating = false; }
-  });
+  const fromFloor = currentInteriorFloor;
+  const toFloor = idx;
+  const pivotX = -4.5;
+  const pivotZ = -2.5;
+  const camRadius = 1.35;
+  const eyeHeight = 1.25;
 
+  // Update HUD instantly
   currentInteriorFloor = idx;
   updateInteriorHUD(idx);
+
+  // If going adjacent floor (e.g. 0 to 1, or 2 to 1), climb or descend the spiral stairs smoothly!
+  if (Math.abs(toFloor - fromFloor) === 1) {
+    controls.enabled = false;
+    const isUp = (toFloor > fromFloor);
+    const progressObj = { val: 0 };
+
+    // Step 1: Slide camera to the foot/head of the stairs
+    const startAngle = isUp ? 0 : Math.PI * 1.4;
+    const startPos = new THREE.Vector3(
+      pivotX + Math.cos(startAngle) * camRadius,
+      fromFloor * FLOOR_H + eyeHeight,
+      pivotZ + Math.sin(startAngle) * camRadius
+    );
+    const startTarget = new THREE.Vector3(
+      pivotX + Math.cos(startAngle + (isUp ? 0.3 : -0.3)) * camRadius,
+      fromFloor * FLOOR_H + eyeHeight - 0.1,
+      pivotZ + Math.sin(startAngle + (isUp ? 0.3 : -0.3)) * camRadius
+    );
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        controls.enabled = true;
+        animating = false;
+      }
+    });
+
+    // Slide to start
+    tl.to(camera.position, {
+      x: startPos.x, y: startPos.y, z: startPos.z,
+      duration: 0.6, ease: 'power2.out',
+      onUpdate: () => {
+        controls.target.lerp(startTarget, 0.1);
+        controls.update();
+      }
+    });
+
+    // Spiral Climb/Descend
+    tl.to(progressObj, {
+      val: 1,
+      duration: 1.8,
+      ease: 'power1.inOut',
+      onUpdate: () => {
+        const p = progressObj.val;
+        const angle = isUp ? p * Math.PI * 1.4 : (1.0 - p) * Math.PI * 1.4;
+        const currentY = (fromFloor + (isUp ? p : -p)) * FLOOR_H + eyeHeight;
+        
+        camera.position.set(
+          pivotX + Math.cos(angle) * camRadius,
+          currentY,
+          pivotZ + Math.sin(angle) * camRadius
+        );
+
+        const lookAhead = isUp ? 0.35 : -0.35;
+        controls.target.set(
+          pivotX + Math.cos(angle + lookAhead) * camRadius,
+          currentY - 0.1,
+          pivotZ + Math.sin(angle + lookAhead) * camRadius
+        );
+        controls.update();
+      }
+    });
+
+    // Slide to final preset view
+    const f = CAM.floors[toFloor];
+    tl.to(camera.position, {
+      x: f.pos.x, y: f.pos.y, z: f.pos.z,
+      duration: 0.9, ease: 'power2.out',
+      onUpdate: () => controls.update()
+    }, '+=0.05');
+
+    tl.to(controls.target, {
+      x: f.target.x, y: f.target.y, z: f.target.z,
+      duration: 0.9, ease: 'power2.out',
+      onUpdate: () => controls.update()
+    }, '<');
+
+  } else {
+    // Direct camera slide for non-adjacent floors
+    const f = CAM.floors[toFloor];
+    gsap.to(camera.position, {
+      x: f.pos.x, y: f.pos.y, z: f.pos.z,
+      duration: 1.4, ease: 'power3.inOut',
+      onUpdate: () => controls.update()
+    });
+    gsap.to(controls.target, {
+      x: f.target.x, y: f.target.y, z: f.target.z,
+      duration: 1.4, ease: 'power3.inOut',
+      onUpdate: () => controls.update(),
+      onComplete: () => { animating = false; }
+    });
+  }
+}
+
+function toggleCSS2DVisibility(group, visible) {
+  if (!group) return;
+  group.traverse(child => {
+    if (child instanceof CSS2DObject) {
+      child.element.style.display = visible ? 'block' : 'none';
+    }
+  });
 }
 
 function updateInteriorHUD(idx) {
@@ -1610,6 +1806,12 @@ function updateInteriorHUD(idx) {
   interiorTags.innerHTML = data.tags
     .map(t => `<span class="floor-item-tag">${t}</span>`)
     .join('');
+
+  // Toggle hotspots visibility: only show current floor's hotspots!
+  toggleCSS2DVisibility(typeof lobbyHotspots !== 'undefined' ? lobbyHotspots : null, idx === 0);
+  toggleCSS2DVisibility(typeof tShirtHotspots !== 'undefined' ? tShirtHotspots : null, idx === 1);
+  toggleCSS2DVisibility(typeof hoodieHotspots !== 'undefined' ? hoodieHotspots : null, idx === 2);
+  toggleCSS2DVisibility(typeof accHotspots !== 'undefined' ? accHotspots : null, idx === 3);
 }
 
 // ─────────────────────────────────────────────────
