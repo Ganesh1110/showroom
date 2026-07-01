@@ -2,7 +2,7 @@ import { Suspense, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, Html, useTexture, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
-import { CARD_IMAGES, getCardImage } from '../../utils/garments'
+import { CARD_IMAGES } from '../../utils/garments'
 
 /* ─────────────────────────────────────────────────────
    Procedurally generated glossy tile-floor texture.

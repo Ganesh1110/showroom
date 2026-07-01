@@ -19,7 +19,6 @@ function GoldParticles() {
     resize()
     window.addEventListener('resize', resize)
 
-    // Gold-tinted bokeh particles
     const particles = Array.from({ length: 70 }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -27,7 +26,7 @@ function GoldParticles() {
       vy: (Math.random() - 0.5) * 0.25,
       size: Math.random() * 4 + 1.5,
       opacity: Math.random() * 0.25 + 0.06,
-      gold: Math.random() > 0.45,  // some particles are gold-tinted
+      gold: Math.random() > 0.45,
     }))
 
     const animate = () => {
@@ -42,7 +41,6 @@ function GoldParticles() {
         if (p.y < 0) p.y = canvas.height
         if (p.y > canvas.height) p.y = 0
 
-        // Glowing bokeh dot
         const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2.5)
         if (p.gold) {
           gradient.addColorStop(0, `rgba(220, 190, 100, ${p.opacity * 2.5})`)
@@ -113,7 +111,7 @@ function SwoopOval() {
   )
 }
 
-/* ── Slide dots (6 dots carousel indicator) ─────────── */
+/* ── Slide dots ─────────────────────────────────────── */
 function SlideDots({ total = 6, active = 0 }) {
   return (
     <div className="flex items-center gap-2">
@@ -127,7 +125,7 @@ function SlideDots({ total = 6, active = 0 }) {
   )
 }
 
-/* ── Category preview strip at bottom ───────────────── */
+/* ── Category preview strip ─────────────────────────── */
 const PREVIEW_CATS = [
   { id: 'tshirt', label: 'T-Shirts', emoji: '👕', color: '#ec4899' },
   { id: 'hoodie', label: 'Hoodies', emoji: '🧥', color: '#8b5cf6' },
@@ -162,18 +160,31 @@ function CategoryPreviewStrip({ onSelect }) {
 
 /* ── Main Home Page ─────────────────────────────────── */
 export default function Home() {
-  const { enterShowroom, selectCategory } = useStore()
+  const { enterShowroom, selectCategory, toggleSettings } = useStore()
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-showroom-dark">
-      {/* Gold bokeh background */}
       <GoldParticles />
 
-      {/* Subtle directional gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/8 via-transparent to-amber-900/8 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 pointer-events-none" />
 
-      {/* Navbar */}
+      {/* Settings gear (top-right) */}
+      <motion.button
+        initial={{ opacity: 0, x: 16 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        onClick={toggleSettings}
+        className="absolute top-6 right-6 z-30 w-9 h-9 rounded-full flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/5 transition-all border border-white/10"
+        aria-label="Settings"
+        id="home-settings-btn"
+      >
+        <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4">
+          <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M8 1.5v1M8 13.5v1M14.5 8h-1M2.5 8h-1M12.5 3.5l-.7.7M4.2 11.8l-.7.7M12.5 12.5l-.7-.7M4.2 4.2l-.7-.7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+        </svg>
+      </motion.button>
+
       <Navbar />
 
       {/* ── Hero block ── */}
@@ -183,11 +194,9 @@ export default function Home() {
         transition={{ duration: 0.9, ease: 'easeOut' }}
         className="relative z-10 text-center px-6 max-w-4xl w-full"
       >
-        {/* Oval swoop headline container */}
         <div className="relative inline-block mb-8 px-10 py-6">
           <SwoopOval />
 
-          {/* Sparkle stars at oval corners */}
           <div className="absolute -top-2 -left-2 sparkle">
             <Sparkle size={22} />
           </div>
@@ -201,14 +210,13 @@ export default function Home() {
             <Sparkle size={16} />
           </div>
 
-          {/* Headline text */}
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8 }}
             className="font-serif text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-light text-white leading-tight tracking-tight"
           >
-            3D Fashion
+            3D Digital
             <br />
             Showroom
           </motion.h1>
@@ -221,16 +229,32 @@ export default function Home() {
           transition={{ delay: 0.7, duration: 0.7 }}
           className="text-white/45 text-base sm:text-lg mb-10 max-w-md mx-auto leading-relaxed"
         >
-          Explore our virtual collection in immersive 3D.
-          Rotate, customize, and experience fashion like never before.
+          Experience fashion in high fidelity.
+          Rotate, customize, and explore our virtual collection.
         </motion.p>
 
-        {/* CTA Button */}
+        {/* CTA Button with idle pulse */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.95, duration: 0.7 }}
+          className="relative inline-block"
         >
+          {/* Pulse ring */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                '0 0 0 0 rgba(201, 168, 76, 0.3)',
+                '0 0 0 8px rgba(201, 168, 76, 0)',
+              ],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
           <button
             onClick={enterShowroom}
             id="enter-showroom-btn"
@@ -239,8 +263,10 @@ export default function Home() {
               background: 'linear-gradient(135deg, #e8d08a 0%, #c9a84c 50%, #b8932e 100%)',
             }}
           >
-            <span>Enter Showroom</span>
-            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" viewBox="0 0 16 16" fill="none">
+            {/* Hover overlay */}
+            <span className="absolute inset-0 bg-white/0 group-hover:bg-white/15 transition-colors duration-300" />
+            <span className="relative z-10">Enter Showroom</span>
+            <svg className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" viewBox="0 0 16 16" fill="none">
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -257,12 +283,11 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-      {/* Bottom 4-pointed star decoration */}
+      {/* Bottom decoration */}
       <div className="absolute bottom-24 right-8 sparkle opacity-60">
         <Sparkle size={28} />
       </div>
 
-      {/* Category preview at very bottom */}
       <CategoryPreviewStrip onSelect={selectCategory} />
     </div>
   )

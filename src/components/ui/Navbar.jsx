@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import useStore from '../../stores/useStore'
 
 const NAV_LINKS = ['Services', 'Products']
 
 export default function Navbar({ onLogin, onSignUp }) {
   const [rendersOpen, setRendersOpen] = useState(false)
+  const startExit = useStore((s) => s.startExit)
 
   return (
     <motion.nav
@@ -68,6 +70,18 @@ export default function Navbar({ onLogin, onSignUp }) {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Exit Showroom button */}
+        <button
+          onClick={startExit}
+          className="text-white/40 text-sm font-medium hover:text-white/80 transition-colors duration-200 flex items-center gap-1.5"
+          id="nav-exit-btn"
+        >
+          <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5">
+            <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Exit
+        </button>
       </div>
 
       {/* Right actions */}

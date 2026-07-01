@@ -4,16 +4,21 @@ import { FLOORS, getSectionCategories, findLocationForCategory } from '../utils/
 const FIRST_FLOOR = FLOORS[0]
 const FIRST_SECTION = FIRST_FLOOR.sections[0]
 
-const useStore = create((set) => ({
+const useStore = create((set, get) => ({
   // ── Navigation ──────────────────────────────────────
-  // 'splash' | 'home' | 'directory' | 'showroom' | 'viewer'
   page: 'splash',
   splashDone: false,
 
-  // ── Showroom location (floor + section) ─────────────
+  // ── Onboarding (Scene 2) ─────────────────────────────
+  onboardingDone: false,
+  motionPreference: 'cinematic',
+  inputDevice: 'mouse',
+  soundEnabled: false,
+
+  // ── Showroom location ────────────────────────────────
   currentFloorId: FIRST_FLOOR.id,
   currentSectionId: FIRST_SECTION.id,
-  hoveredCategory: null,   // for pedestal preview in showroom
+  hoveredCategory: null,
 
   // ── Product selection ───────────────────────────────
   selectedCategory: null,
@@ -32,11 +37,30 @@ const useStore = create((set) => ({
   autoRotate: true,
   isLoading: false,
   showCustomization: false,
-  viewerZoom: 3.2,         // camera Z distance (maps to slider)
+  viewerZoom: 3.2,
 
-  // ── Actions ─────────────────────────────────────────
+  // ── Cart & Wishlist (Scene 8) ───────────────────────
+  cartItems: [],
+  wishlistItems: [],
+
+  // ── Settings (Scene 9) ──────────────────────────────
+  showSettings: false,
+  graphicsQuality: 'high',
+  audioVolume: 0.4,
+  contrastProfile: 'normal',
+
+  // ── Exit sequence (Scene 11) ────────────────────────
+  isExiting: false,
+
+  // ── Actions: Navigation ─────────────────────────────
   setPage: (page) => set({ page }),
-  completeSplash: () => set({ splashDone: true, page: 'home' }),
+  completeSplash: () => set({ splashDone: true, page: 'onboarding' }),
+  completeOnboarding: () => set({ onboardingDone: true, page: 'home' }),
+
+  setMotionPreference: (val) => set({ motionPreference: val }),
+  setInputDevice: (val) => set({ inputDevice: val }),
+  setSoundEnabled: (val) => set({ soundEnabled: val }),
+
   setHoveredCategory: (category) => set({ hoveredCategory: category }),
   setCurrentColor: (color) => set({ currentColor: color }),
   setCurrentTexture: (texture) => set({ currentTexture: texture }),
@@ -47,6 +71,29 @@ const useStore = create((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setViewerZoom: (zoom) => set({ viewerZoom: zoom }),
   toggleCustomization: () => set((state) => ({ showCustomization: !state.showCustomization })),
+  toggleSettings: () => set((state) => ({ showSettings: !state.showSettings })),
+  setGraphicsQuality: (val) => set({ graphicsQuality: val }),
+  setAudioVolume: (val) => set({ audioVolume: val }),
+  setContrastProfile: (val) => set({ contrastProfile: val }),
+
+  // ── Cart actions ────────────────────────────────────
+  addToCart: (itemId) => set((state) => {
+    if (state.cartItems.includes(itemId)) return state
+    return { cartItems: [...state.cartItems, itemId] }
+  }),
+  removeFromCart: (itemId) => set((state) => ({
+    cartItems: state.cartItems.filter((id) => id !== itemId),
+  })),
+  isInCart: (itemId) => get().cartItems.includes(itemId),
+
+  // ── Wishlist actions ────────────────────────────────
+  toggleWishlist: (itemId) => set((state) => {
+    if (state.wishlistItems.includes(itemId)) {
+      return { wishlistItems: state.wishlistItems.filter((id) => id !== itemId) }
+    }
+    return { wishlistItems: [...state.wishlistItems, itemId] }
+  }),
+  isInWishlist: (itemId) => get().wishlistItems.includes(itemId),
 
   // ── Directory / floor / section navigation ──────────
   enterShowroom: () => set({ page: 'directory' }),
@@ -65,7 +112,6 @@ const useStore = create((set) => ({
 
   selectSection: (sectionId) => set({ currentSectionId: sectionId, hoveredCategory: null }),
 
-  // Move up/down a floor without returning to the directory lobby
   nextFloor: () => set((state) => {
     const idx = FLOORS.findIndex((f) => f.id === state.currentFloorId)
     const next = FLOORS[(idx + 1) % FLOORS.length]
@@ -78,8 +124,6 @@ const useStore = create((set) => ({
   }),
 
   selectCategory: (category) => {
-    // Keep floor/section navigation in sync with whatever category was picked,
-    // even if it was chosen from outside the showroom (e.g. the Home page strip).
     const { floorId, sectionId } = findLocationForCategory(category)
     set({
       selectedCategory: category,
@@ -106,8 +150,6 @@ const useStore = create((set) => ({
     materialProps: { roughness: 0.6, metalness: 0.0, opacity: 1.0, fabricShine: 0.3 },
   }),
 
-  // Navigate to next / prev category — scoped to the current section, so
-  // browsing in the viewer mirrors the section you entered from.
   nextCategory: () => set((state) => {
     const list = getSectionCategories(state.currentFloorId, state.currentSectionId).map((c) => c.id)
     if (list.length === 0) return {}
@@ -121,6 +163,18 @@ const useStore = create((set) => ({
     const idx = list.indexOf(state.selectedCategory)
     const prev = list[(idx - 1 + list.length) % list.length]
     return { selectedCategory: prev, isLoading: true, autoRotate: true, showCustomization: false }
+  }),
+
+  // ── Exit sequence (Scene 11) ─────────────────────────
+  startExit: () => set({ isExiting: true }),
+  completeExit: () => set({
+    page: 'home',
+    isExiting: false,
+    selectedCategory: null,
+    hoveredCategory: null,
+    showCustomization: false,
+    cartItems: [],
+    wishlistItems: [],
   }),
 }))
 

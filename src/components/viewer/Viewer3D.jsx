@@ -1,28 +1,32 @@
-import { Suspense, useEffect, useRef } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Suspense, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Float } from '@react-three/drei'
+import * as THREE from 'three'
 import useStore from '../../stores/useStore'
 import GarmentModel from './GarmentModel'
 import Environment from './Environment'
 
-/* ── Sync camera Z distance with store zoom ── */
-function CameraSync() {
+/* ── Smooth zoom interpolation via useFrame ── */
+function SmoothCamera() {
   const { viewerZoom } = useStore()
   const { camera } = useThree()
-  const controlsRef = useRef()
 
-  useEffect(() => {
-    if (camera) {
-      // Interpolate camera Z to the desired zoom level
-      camera.position.z = viewerZoom
-    }
-  }, [viewerZoom, camera])
+  targetRef.current = viewerZoom
+
+  useFrame((state, delta) => {
+    camera.position.z = THREE.MathUtils.lerp(
+      camera.position.z,
+      targetRef.current,
+      Math.min(1, delta * 4)
+    )
+  })
 
   return null
 }
 
 export default function Viewer3D() {
-  const { autoRotate } = useStore()
+  const { autoRotate, motionPreference } = useStore()
+  const isLowMotion = motionPreference === 'low'
 
   return (
     <div className="w-full h-full">
@@ -41,9 +45,13 @@ export default function Viewer3D() {
       >
         <Suspense fallback={null}>
           <Environment />
-          <CameraSync />
+          <SmoothCamera />
 
-          <Float speed={1.2} rotationIntensity={0} floatIntensity={0.08}>
+          <Float
+            speed={isLowMotion ? 0 : 1.2}
+            rotationIntensity={0}
+            floatIntensity={isLowMotion ? 0 : 0.08}
+          >
             <GarmentModel />
           </Float>
 
@@ -55,8 +63,8 @@ export default function Viewer3D() {
             minPolarAngle={Math.PI / 6}
             maxPolarAngle={Math.PI / 1.6}
             autoRotate={autoRotate}
-            autoRotateSpeed={2.0}
-            enableDamping
+            autoRotateSpeed={isLowMotion ? 0 : 2.0}
+            enableDamping={!isLowMotion}
             dampingFactor={0.07}
             rotateSpeed={0.65}
           />
