@@ -27,18 +27,25 @@ canvas { display: block; }
   color: rgba(201,168,76,0.6); letter-spacing: 2px; margin-bottom: 8px;
 }
 #brand h1 {
-  font-family: 'Playfair Display', serif; font-weight: 400;
-  font-size: 12px; letter-spacing: 4px;
-  color: rgba(255,255,255,0.45); text-transform: uppercase;
+  font-family: 'Playfair Display', serif; font-weight: 600;
+  font-size: 14px; letter-spacing: 4px;
+  color: #e8d08a; text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
 }
 #brand h2 {
-  font-family: 'Playfair Display', serif; font-weight: 400;
-  font-size: 20px; letter-spacing: 2px;
-  color: rgba(255,255,255,0.85); margin-top: 1px;
+  font-family: 'Playfair Display', serif; font-weight: 600;
+  font-size: 28px; letter-spacing: 2px;
+  background: linear-gradient(135deg, #e8d08a 0%, #c9a84c 50%, #b8932e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 2px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 #brand .tagline {
-  font-size: 9px; font-weight: 300; letter-spacing: 2px;
-  color: rgba(255,255,255,0.25); margin-top: 4px; text-transform: uppercase;
+  font-size: 10px; font-weight: 400; letter-spacing: 2px;
+  color: rgba(255,255,255,0.65); margin-top: 6px; text-transform: uppercase;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.5);
 }
 #controls-hint {
   position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
@@ -112,14 +119,18 @@ canvas { display: block; }
   <div id="controls-hint">Drag to orbit &middot; Scroll to zoom &middot; Click floors</div>
 </div>
 <script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
 
 const W1=20, D1=13, W2=17, D2=11, W3=14, D3=9, FH=4.8;
 const F1=0, F2=FH+0.35, F3=(FH+0.35)*2, ROOF=(FH+0.35)*3+0.35;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x07070a);
+const textureLoader = new THREE.TextureLoader();
+textureLoader.load('/city_skyline.jpg', (texture) => {
+  texture.colorSpace = THREE.SRGBColorSpace;
+  scene.background = texture;
+});
 scene.fog = new THREE.Fog(0x07070a, 35, 65);
 
 const camera = new THREE.PerspectiveCamera(30, innerWidth/innerHeight, 0.1, 100);
@@ -301,19 +312,75 @@ t2.position.set(0, F2-0.1, -D2/2-(D1-D2)/4-0.2); scene.add(t2);
 const t3 = new THREE.Mesh(new THREE.BoxGeometry(W3+0.5, 0.12, (D2-D3)/2+0.4), tM());
 t3.position.set(0, F3-0.1, -D3/2-(D2-D3)/4-0.2); scene.add(t3);
 
-const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.06, 1.8), bM());
-canopy.position.set(0, FH-0.3, -D1/2-0.6); scene.add(canopy);
+// ── Grand Entrance (placed on the front face Z = +D1/2 + 0.15, facing the camera) ──
+const entranceGroup = new THREE.Group();
+entranceGroup.position.set(0, 0, D1/2 + 0.05);
+scene.add(entranceGroup);
+
+// Grand Canopy
+const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.08, 2.0), bM());
+canopy.position.set(0, FH - 0.3, 1.0);
+canopy.castShadow = true;
+entranceGroup.add(canopy);
+
+// Support Rods
 for (const x of [-1.8, 1.8]) {
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), bM());
-  rod.position.set(x, FH-0.05, -D1/2-0.6); scene.add(rod);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 8), bM());
+  rod.position.set(x, FH - 0.05, 1.0);
+  rod.castShadow = true;
+  entranceGroup.add(rod);
 }
-const eMat = new THREE.MeshPhysicalMaterial({ color: 0x7799bb, transparent: true, opacity: 0.12, roughness: 0.05, metalness: 0, side: THREE.DoubleSide });
-const entry = new THREE.Mesh(new THREE.PlaneGeometry(2.6, FH*1.4), eMat);
-entry.position.set(0, F1+FH*0.7, -D1/2-0.15); scene.add(entry);
-for (const x of [-1.35, 1.35]) {
-  const f = new THREE.Mesh(new THREE.BoxGeometry(0.06, FH*1.4, 0.08), bM());
-  f.position.set(x, F1+FH*0.7, -D1/2-0.15); scene.add(f);
+
+// Outer door frame (bronze)
+const outerFrameTop = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.08, 0.12), bM());
+outerFrameTop.position.set(0, FH * 0.7, 0);
+outerFrameTop.castShadow = true;
+entranceGroup.add(outerFrameTop);
+
+for (const x of [-1.4, 1.4]) {
+  const framePost = new THREE.Mesh(new THREE.BoxGeometry(0.08, FH * 0.7, 0.12), bM());
+  framePost.position.set(x, FH * 0.35, 0);
+  framePost.castShadow = true;
+  entranceGroup.add(framePost);
 }
+
+// Double Glass Doors
+const doorMat = new THREE.MeshPhysicalMaterial({
+  color: 0x88bbee,
+  transparent: true,
+  opacity: 0.25,
+  roughness: 0.02,
+  metalness: 0.1,
+  side: THREE.DoubleSide,
+});
+
+// Left Door Panel
+const doorLeft = new THREE.Mesh(new THREE.BoxGeometry(1.33, FH * 0.67, 0.06), doorMat);
+doorLeft.position.set(-0.68, FH * 0.35, 0);
+doorLeft.castShadow = true;
+entranceGroup.add(doorLeft);
+
+// Right Door Panel
+const doorRight = new THREE.Mesh(new THREE.BoxGeometry(1.33, FH * 0.67, 0.06), doorMat);
+doorRight.position.set(0.68, FH * 0.35, 0);
+doorRight.castShadow = true;
+entranceGroup.add(doorRight);
+
+// Door Handles (bronze)
+const handleLeft = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.9, 0.04), bM());
+handleLeft.position.set(-0.1, FH * 0.35, 0.06);
+entranceGroup.add(handleLeft);
+
+const handleRight = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.9, 0.04), bM());
+handleRight.position.set(0.1, FH * 0.35, 0.06);
+entranceGroup.add(handleRight);
+
+// Spotlight illuminating the grand entrance facade & steps
+const entranceSpot = new THREE.SpotLight(0xffeedd, 5.0, 16, Math.PI / 3, 0.5, 1);
+entranceSpot.position.set(0, FH - 0.2, 2.0);
+entranceSpot.target.position.set(0, 0, 0);
+entranceGroup.add(entranceSpot);
+entranceGroup.add(entranceSpot.target);
 
 for (const fl of [F1, F2, F3]) {
   const fw = fl===F1?W1:fl===F2?W2:W3, fd = fl===F1?D1:fl===F2?D2:D3;
