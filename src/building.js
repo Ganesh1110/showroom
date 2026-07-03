@@ -569,3 +569,80 @@ export function makePartitionWall(x, y, z, rotY, color = 0x2a3d4a) {
 
   return g;
 }
+
+export function createWoodSlatWall(width, height) {
+  const group = new THREE.Group();
+  
+  // Backing wall
+  const backing = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, 0.08),
+    MAT.woodSlatDark
+  );
+  backing.position.z = -0.04;
+  backing.receiveShadow = true;
+  group.add(backing);
+
+  // Instanced wood slats
+  const slatW = 0.12;
+  const gap = 0.12;
+  const slatDepth = 0.08;
+  const numSlats = Math.floor(width / (slatW + gap));
+  const startX = -width / 2 + slatW / 2;
+
+  const slatGeo = new THREE.BoxGeometry(slatW, height, slatDepth);
+  const slatMesh = new THREE.InstancedMesh(slatGeo, MAT.woodSlat, numSlats);
+  slatMesh.castShadow = true;
+  slatMesh.receiveShadow = true;
+
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < numSlats; i++) {
+    dummy.position.set(startX + i * (slatW + gap), 0, slatDepth / 2);
+    dummy.updateMatrix();
+    slatMesh.setMatrixAt(i, dummy.matrix);
+  }
+  slatMesh.instanceMatrix.needsUpdate = true;
+  group.add(slatMesh);
+
+  return group;
+}
+
+export function createDisplayWindowPedestal(height, radius) {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 32), MAT.conc);
+  base.position.y = height / 2;
+  base.castShadow = true;
+  base.receiveShadow = true;
+  g.add(base);
+  return g;
+}
+
+export function createGooseneckFixture() {
+  const group = new THREE.Group();
+  
+  // Curved rod
+  const curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 0.4, 0.3),
+    new THREE.Vector3(0, 0.2, 0.7),
+    new THREE.Vector3(0, -0.1, 0.75),
+  ]);
+  const tubeGeo = new THREE.TubeGeometry(curve, 16, 0.02, 8, false);
+  const rod = new THREE.Mesh(tubeGeo, MAT.steelDark);
+  rod.castShadow = true;
+  group.add(rod);
+
+  // Lamp shade
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.22, 16), MAT.steelDark);
+  shade.position.set(0, -0.1, 0.75);
+  shade.rotation.x = Math.PI / 6;
+  shade.castShadow = true;
+  group.add(shade);
+
+  // Emissive bulb
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), MAT.emitWhite);
+  bulb.position.set(0, -0.16, 0.72);
+  group.add(bulb);
+
+  return group;
+}
+

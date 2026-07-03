@@ -1,14 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Playfair+Display:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=Outfit:wght@200;300;400;500;600&family=Playfair+Display:wght@300;400;500&display=swap');
 
 :root {
-  --gold: #C9A84C;
-  --gold-light: #F5D76E;
-  --gold-dark: #A88930;
-  --charcoal: #1a1a1a;
-  --dark: #080810;
-  --surface: rgba(12,12,20,0.85);
-  --glass: rgba(255,255,255,0.04);
-  --glass-border: rgba(255,255,255,0.08);
+  --gold: #D4AF37;
+  --gold-light: #fbe69d;
+  --gold-dark: #967616;
+  --charcoal: #111111;
+  --dark: #0a0a0f;
+  --surface: rgba(10,10,12,0.92);
+  --glass: rgba(255,255,255,0.02);
+  --glass-border: rgba(255,255,255,0.05);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,7 +16,7 @@
 body {
   overflow: hidden;
   background: var(--dark);
-  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Outfit', 'Inter', 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 

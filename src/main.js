@@ -8,6 +8,8 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { FontLoader } from "three/addons/loaders/FontLoader.js";
+import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
 import gsap from "gsap";
 
 import {
@@ -37,6 +39,9 @@ import {
   makePartitionWall,
   mannequinHeads,
   mannequinTorsos,
+  createWoodSlatWall,
+  createDisplayWindowPedestal,
+  createGooseneckFixture,
 } from "./building.js";
 import {
   showToast,
@@ -158,7 +163,7 @@ rimLight.position.set(-10, 6, 22);
 scene.add(rimLight);
 
 // ─────────────────────────────────────────────────
-//  GROUND
+//  GROUND & PLATFORM
 // ─────────────────────────────────────────────────
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), MAT.groundMat);
 ground.rotation.x = -Math.PI / 2;
@@ -167,33 +172,58 @@ ground.receiveShadow = true;
 scene.add(ground);
 
 const plaza = new THREE.Mesh(
-  new THREE.PlaneGeometry(W + 8, 10),
+  new THREE.PlaneGeometry(300, 40),
   new THREE.MeshStandardMaterial({
-    color: 0x1a1a22,
-    roughness: 0.7,
+    color: 0xd4d4d4,
+    roughness: 0.8,
     metalness: 0.1,
   }),
 );
 plaza.rotation.x = -Math.PI / 2;
-plaza.position.set(0, -0.02, D / 2 + 4.5);
+plaza.position.set(0, -0.02, D / 2 + 10);
 plaza.receiveShadow = true;
 scene.add(plaza);
 
-for (let i = -3; i <= 3; i++) {
-  const strip = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.04, 8),
-    new THREE.MeshStandardMaterial({
-      color: 0xc9a84c,
-      roughness: 0.3,
-      metalness: 0.9,
-      emissive: 0xc9a84c,
-      emissiveIntensity: 0.04,
-    }),
-  );
-  strip.rotation.x = -Math.PI / 2;
-  strip.position.set(i * 1.2, -0.01, D / 2 + 4.5);
-  scene.add(strip);
-}
+// Asphalt road in front
+const road = new THREE.Mesh(
+  new THREE.PlaneGeometry(300, 40),
+  new THREE.MeshStandardMaterial({
+    color: 0x1a1c1d,
+    roughness: 0.9
+  })
+);
+road.rotation.x = -Math.PI / 2;
+road.position.set(0, -0.05, D / 2 + 35);
+road.receiveShadow = true;
+scene.add(road);
+
+// Luxury 3-tiered floating steps/platform leading to entrance
+const step1 = new THREE.Mesh(new THREE.BoxGeometry(W + 3, 0.1, 3.2), MAT.conc);
+step1.position.set(0, 0.05, D / 2 + 1.6);
+step1.receiveShadow = true;
+step1.castShadow = true;
+scene.add(step1);
+
+const step2 = new THREE.Mesh(new THREE.BoxGeometry(W + 2, 0.1, 1.4), MAT.conc);
+step2.position.set(0, -0.05, D / 2 + 3.1);
+step2.receiveShadow = true;
+step2.castShadow = true;
+scene.add(step2);
+
+const step3 = new THREE.Mesh(new THREE.BoxGeometry(W + 1, 0.1, 1.4), MAT.conc);
+step3.position.set(0, -0.15, D / 2 + 4.3);
+step3.receiveShadow = true;
+step3.castShadow = true;
+scene.add(step3);
+
+// Flanking trees
+const treeL = makeBigPottedPlant(-W / 2 - 1.8, 0, D / 2 + 2.5);
+treeL.scale.set(1.4, 1.4, 1.4);
+scene.add(treeL);
+
+const treeR = makeBigPottedPlant(W / 2 + 1.8, 0, D / 2 + 2.5);
+treeR.scale.set(1.4, 1.4, 1.4);
+scene.add(treeR);
 
 // ─────────────────────────────────────────────────
 //  BUILDING STRUCTURE
@@ -212,9 +242,11 @@ for (let i = 0; i <= NUM_FLOORS; i++) {
   building.add(slab);
 }
 
-// Solid walls
+// Solid walls with premium wood slat interiors
 for (let i = 0; i < NUM_FLOORS; i++) {
   const wallY = i * FLOOR_H + FLOOR_H / 2;
+  
+  // Concrete outer structure
   const backWall = new THREE.Mesh(
     new THREE.BoxGeometry(W, FLOOR_H, 0.15),
     MAT.conc,
@@ -241,6 +273,29 @@ for (let i = 0; i < NUM_FLOORS; i++) {
   rightWall.receiveShadow = true;
   rightWall.castShadow = true;
   building.add(rightWall);
+
+  // Interior Wood Slat Wall cladding
+  if (i === 0) {
+    // Lobby gets a central wood slat feature wall behind reception area
+    const backSlatFeature = createWoodSlatWall(6.0, FLOOR_H - 0.08);
+    backSlatFeature.position.set(0, wallY, -D / 2 + 0.09);
+    building.add(backSlatFeature);
+  } else {
+    // Upper floors get complete slat wall wraps
+    const backSlat = createWoodSlatWall(W - 0.1, FLOOR_H - 0.08);
+    backSlat.position.set(0, wallY, -D / 2 + 0.09);
+    building.add(backSlat);
+
+    const leftSlat = createWoodSlatWall(D - 0.1, FLOOR_H - 0.08);
+    leftSlat.rotation.y = Math.PI / 2;
+    leftSlat.position.set(-W / 2 + 0.09, wallY, 0);
+    building.add(leftSlat);
+
+    const rightSlat = createWoodSlatWall(D - 0.1, FLOOR_H - 0.08);
+    rightSlat.rotation.y = -Math.PI / 2;
+    rightSlat.position.set(W / 2 - 0.09, wallY, 0);
+    building.add(rightSlat);
+  }
 }
 
 // Facade curtain glass wall
@@ -253,9 +308,11 @@ for (let i = 0; i < NUM_FLOORS; i++) {
   // Mullions
   for (let b = 0; b <= numBays; b++) {
     const mx = -W / 2 + (b / numBays) * W;
+    if (i === 0 && b === 2) continue; // Keep center door bay completely open
+    
     const mullion = new THREE.Mesh(
       new THREE.BoxGeometry(mullionW, panelH, mullionW),
-      MAT.steel,
+      MAT.steelDark,
     );
     mullion.position.set(mx, baseY + panelH / 2 + 0.04, D / 2);
     building.add(mullion);
@@ -265,6 +322,8 @@ for (let i = 0; i < NUM_FLOORS; i++) {
   const bayW = W / numBays;
   for (let b = 0; b < numBays; b++) {
     const px = -W / 2 + b * bayW + bayW / 2;
+    if (i === 0 && (b === 1 || b === 2)) continue; // Left & Right glass bays only on Ground floor (Showcase windows)
+    
     const glass = new THREE.Mesh(
       new THREE.BoxGeometry(bayW - mullionW, panelH, 0.04),
       MAT.glass,
@@ -276,9 +335,9 @@ for (let i = 0; i < NUM_FLOORS; i++) {
   const glowPlane = new THREE.Mesh(
     new THREE.PlaneGeometry(W - 1, panelH - 0.2),
     new THREE.MeshBasicMaterial({
-      color: 0xfff6e8,
+      color: 0xffeedd,
       transparent: true,
-      opacity: 0.06,
+      opacity: 0.04,
       side: THREE.DoubleSide,
     }),
   );
@@ -287,17 +346,18 @@ for (let i = 0; i < NUM_FLOORS; i++) {
 }
 
 // ─────────────────────────────────────────────────
-//  LIGHTING CONSOLIDATION (1 point light per floor)
+//  LIGHTING CONSOLIDATION (1 point light per floor + boutique spotlights)
 // ─────────────────────────────────────────────────
 const interiorLights = [];
 for (let i = 0; i < NUM_FLOORS; i++) {
   const lightY = i * FLOOR_H + FLOOR_H * 0.75;
 
-  const ptC = new THREE.PointLight(0xfff8f2, 5.2, FLOOR_H * 3.5, 1.25);
+  const ptC = new THREE.PointLight(0xfff8f2, 4.2, FLOOR_H * 3.5, 1.25);
   ptC.position.set(0, lightY, 0);
   building.add(ptC);
   interiorLights.push(ptC);
 
+  // Ceiling warm wash lights
   for (const lx of [-3.5, -1.2, 1.2, 3.5]) {
     const strip = new THREE.Mesh(
       new THREE.BoxGeometry(2.2, 0.04, 0.18),
@@ -305,6 +365,21 @@ for (let i = 0; i < NUM_FLOORS; i++) {
     );
     strip.position.set(lx, i * FLOOR_H + FLOOR_H - 0.08, 0);
     building.add(strip);
+  }
+
+  // Soft spotlights pointing at the walls on boutique floors
+  if (i > 0) {
+    const spotL = new THREE.SpotLight(0xffecd2, 12, 8, Math.PI / 4, 0.5, 1);
+    spotL.position.set(0, lightY + 0.4, 0);
+    spotL.target.position.set(-W / 2 + 1, lightY - 1.2, 0);
+    building.add(spotL);
+    building.add(spotL.target);
+
+    const spotR = new THREE.SpotLight(0xffecd2, 12, 8, Math.PI / 4, 0.5, 1);
+    spotR.position.set(0, lightY + 0.4, 0);
+    spotR.target.position.set(W / 2 - 1, lightY - 1.2, 0);
+    building.add(spotR);
+    building.add(spotR.target);
   }
 }
 
@@ -433,9 +508,121 @@ const rightDoorFrame = new THREE.Mesh(
 rightDoorFrame.position.set(-doorW / 2, doorFrameH / 2, 0);
 rightDoorPivot.add(rightDoorFrame);
 
-const brandSign = makeCSSLabel("Earth Positive");
-brandSign.position.set(0, doorFrameH + 0.55, D / 2 + 0.18);
-building.add(brandSign);
+// Premium Gooseneck Lighted Signboard Panel
+const signPanel = new THREE.Mesh(
+  new THREE.BoxGeometry(4.8, 1.1, 0.12),
+  new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, metalness: 0.4 })
+);
+signPanel.position.set(0, doorFrameH + 0.65, D / 2 + 0.08);
+signPanel.castShadow = true;
+building.add(signPanel);
+
+// Gooseneck Lights
+const gooseneckL = createGooseneckFixture();
+gooseneckL.position.set(-1.6, doorFrameH + 1.2, D / 2 + 0.08);
+building.add(gooseneckL);
+
+const gooseneckR = createGooseneckFixture();
+gooseneckR.position.set(1.6, doorFrameH + 1.2, D / 2 + 0.08);
+building.add(gooseneckR);
+
+// Helper to create illuminated interior signs
+function createIlluminatedSign(text, font, size) {
+  const group = new THREE.Group();
+  
+  const textGeo = new TextGeometry(text, {
+    font: font,
+    size: size,
+    depth: 0.04,
+    curveSegments: 8,
+    bevelEnabled: true,
+    bevelThickness: 0.01,
+    bevelSize: 0.005,
+    bevelSegments: 3,
+  });
+  textGeo.center();
+  
+  const textMesh = new THREE.Mesh(textGeo, MAT.gold);
+  textMesh.position.z = 0.02;
+  textMesh.castShadow = true;
+  group.add(textMesh);
+
+  // Subtle glow backing plane
+  const glowMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(text.length * size * 0.75, size * 1.5),
+    new THREE.MeshBasicMaterial({
+      color: 0xffeedd,
+      transparent: true,
+      opacity: 0.12,
+      side: THREE.DoubleSide
+    })
+  );
+  glowMesh.position.z = -0.01;
+  group.add(glowMesh);
+
+  return group;
+}
+
+// Load Font and Fabricate Champagne Gold 3D Text + Glowing Logo + Interior branding
+const fontLoader = new FontLoader();
+fontLoader.load("https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/helvetiker_bold.typeface.json", (font) => {
+  // Create 3D text for facade signboard
+  const textGeo = new TextGeometry("EARTH POSITIVE", {
+    font: font,
+    size: 0.28,
+    depth: 0.04,
+    curveSegments: 8,
+    bevelEnabled: true,
+    bevelThickness: 0.01,
+    bevelSize: 0.005,
+    bevelSegments: 3,
+  });
+  textGeo.center();
+  const textMesh = new THREE.Mesh(textGeo, MAT.gold);
+  textMesh.position.set(0.4, doorFrameH + 0.65, D / 2 + 0.15);
+  textMesh.castShadow = true;
+  building.add(textMesh);
+
+  // Logo Circle
+  const logoCircle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.3, 0.02, 32),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6, metalness: 0.1 })
+  );
+  logoCircle.rotation.x = Math.PI / 2;
+  logoCircle.position.set(-1.4, doorFrameH + 0.65, D / 2 + 0.15);
+  logoCircle.castShadow = true;
+  building.add(logoCircle);
+
+  // Small glowing leaf icon inside logo circle
+  const leaf = new THREE.Mesh(
+    new THREE.ConeGeometry(0.08, 0.18, 16),
+    new THREE.MeshStandardMaterial({ color: 0x90ee90, emissive: 0x90ee90, emissiveIntensity: 0.5 })
+  );
+  leaf.rotation.z = Math.PI / 4;
+  leaf.position.set(-1.4, doorFrameH + 0.65, D / 2 + 0.17);
+  building.add(leaf);
+
+  // Dynamic back-wall illuminated signs for all floors
+  // Lobby Sign
+  const lobbySign = createIlluminatedSign("EARTH POSITIVE", font, 0.38);
+  lobbySign.position.set(0, FLOOR_H * 0.72, -D / 2 + 0.18);
+  building.add(lobbySign);
+
+  // 1F (T-Shirts) Sign
+  const tShirtSign = createIlluminatedSign("T-SHIRTS ATELIER", font, 0.32);
+  tShirtSign.position.set(0, FLOOR_H + FLOOR_H * 0.75, -D / 2 + 0.15);
+  building.add(tShirtSign);
+
+  // 2F (Hoodies) Sign
+  const hoodieSign = createIlluminatedSign("HOODIES & STREETWEAR", font, 0.32);
+  hoodieSign.position.set(0, FLOOR_H * 2 + FLOOR_H * 0.75, -D / 2 + 0.15);
+  building.add(hoodieSign);
+
+  // 3F (Accessories) Sign
+  const accSign = createIlluminatedSign("ACCESSORIES SUITE", font, 0.32);
+  accSign.position.set(0, FLOOR_H * 3 + FLOOR_H * 0.75, -D / 2 + 0.15);
+  building.add(accSign);
+});
 
 const enterDiv = document.createElement("div");
 enterDiv.id = "enter-hotspot";
@@ -468,6 +655,31 @@ building.add(enterBtnLabel);
 // ─────────────────────────────────────────────────
 const lobby = new THREE.Group();
 building.add(lobby);
+
+// Ground Floor Display Showcase Windows behind facade
+const displayPedestalL = createDisplayWindowPedestal(0.7, 0.45);
+displayPedestalL.position.set(-4.2, 0.04, D / 2 - 0.8);
+lobby.add(displayPedestalL);
+
+const mannequinShowcaseL = makeMannequin(-4.2, 0.74, D / 2 - 0.8, Math.PI / 6, 0xffffff);
+mannequinShowcaseL.scale.set(0.9, 0.9, 0.9);
+lobby.add(mannequinShowcaseL);
+
+const plantShowcaseL = makeBigPottedPlant(-5.2, 0.04, D / 2 - 0.8);
+plantShowcaseL.scale.set(0.6, 0.6, 0.6);
+lobby.add(plantShowcaseL);
+
+const displayPedestalR = createDisplayWindowPedestal(0.7, 0.45);
+displayPedestalR.position.set(4.2, 0.04, D / 2 - 0.8);
+lobby.add(displayPedestalR);
+
+const mannequinShowcaseR = makeMannequin(4.2, 0.74, D / 2 - 0.8, -Math.PI / 6, 0xD4AF37);
+mannequinShowcaseR.scale.set(0.9, 0.9, 0.9);
+lobby.add(mannequinShowcaseR);
+
+const plantShowcaseR = makeBigPottedPlant(5.2, 0.04, D / 2 - 0.8);
+plantShowcaseR.scale.set(0.6, 0.6, 0.6);
+lobby.add(plantShowcaseR);
 
 const floorDecals = new THREE.Group();
 const numDecals = 16;
@@ -934,6 +1146,7 @@ function makePropHotspot(name, desc, x, y, z) {
   });
 
   btn.style.display = "none";
+  btn.style.visibility = "hidden";
   const obj = new CSS2DObject(btn);
   obj.position.set(x, y, z);
   return obj;
@@ -957,6 +1170,7 @@ function makeNavHotspot(targetFloor, text, x, y, z) {
     pointerEvents: "auto",
     whiteSpace: "nowrap",
     textTransform: "uppercase",
+    visibility: "hidden",
   });
 
   btn.addEventListener("click", (e) => {
@@ -977,16 +1191,30 @@ function toggleCSS2DVisibility(group, show) {
   if (!group) return;
   group.traverse((node) => {
     if (node instanceof CSS2DObject && node.element) {
+      if (node.element.id === "enter-hotspot") {
+        return;
+      }
       node.element.style.display = show ? "block" : "none";
+      node.element.style.visibility = show ? "visible" : "hidden";
     }
   });
 }
 
 function updateHotspotsVisibility(idx) {
-  toggleCSS2DVisibility(lobbyHotspots, isInside && idx === 0);
-  toggleCSS2DVisibility(tShirtHotspots, isInside && idx === 1);
-  toggleCSS2DVisibility(hoodieHotspots, isInside && idx === 2);
-  toggleCSS2DVisibility(accHotspots, isInside && idx === 3);
+  // If the user is outside the building, completely hide all hotspot groups
+  if (!isInside) {
+    toggleCSS2DVisibility(lobbyHotspots, false);
+    toggleCSS2DVisibility(tShirtHotspots, false);
+    toggleCSS2DVisibility(hoodieHotspots, false);
+    toggleCSS2DVisibility(accHotspots, false);
+    return;
+  }
+
+  // Otherwise, fallback to the original per-floor filter logic
+  toggleCSS2DVisibility(lobbyHotspots, idx === 0);
+  toggleCSS2DVisibility(tShirtHotspots, idx === 1);
+  toggleCSS2DVisibility(hoodieHotspots, idx === 2);
+  toggleCSS2DVisibility(accHotspots, idx === 3);
 }
 
 // ─────────────────────────────────────────────────
@@ -1171,13 +1399,23 @@ function exitBuilding() {
   animating = true;
   controls.enabled = false;
 
+  // Update state immediately so visibility routers catch the change
+  isInside = false;
+
+  // Force hide all interactive hot overlays right away
+  updateHotspotsVisibility(0);
+
   const lobbyY = FLOOR_H * 0.5;
   const doorZ = D / 2 + 0.1;
   const duration = prefersReducedMotion ? 0 : 1.6;
 
   const exitTimeline = gsap.timeline({
     onComplete: () => {
-      isInside = false;
+      document
+        .querySelectorAll(".nav-hotspot-btn, .prop-hotspot-btn")
+        .forEach((el) => {
+          el.style.display = "none";
+        });
       controls.minDistance = 6;
       controls.maxDistance = 50;
       controls.maxPolarAngle = Math.PI / 2.1;
@@ -1187,14 +1425,12 @@ function exitBuilding() {
       controls.update();
 
       const enterDiv = document.getElementById("enter-hotspot");
-      // const navDots = document.getElementById("nav-dots");
       const hintEl = document.getElementById("hint");
       const backBtn = document.getElementById("back-btn");
       const dn = document.getElementById("daynight-toggle");
       const bl = document.getElementById("bloom-toggle");
 
       if (enterDiv) enterDiv.style.display = "flex";
-      // if (navDots) navDots.style.display = "flex";
       if (hintEl) {
         hintEl.textContent = isTouchDevice
           ? "Touch & Drag to Orbit · Pinch to Zoom · Tap Door to Enter"
@@ -1206,8 +1442,6 @@ function exitBuilding() {
       if (interiorHUD) interiorHUD.classList.remove("visible");
 
       updateFloorVisibility(0);
-      updateHotspotsVisibility(0);
-
       animating = false;
     },
   });
@@ -1673,10 +1907,14 @@ THREE.DefaultLoadingManager.onLoad = () => {
     if (loadingScreen) loadingScreen.classList.add("hidden");
 
     const fiDesc = document.getElementById("fiDesc");
+    const floorInfoEl = document.getElementById("floor-info");
+    const fiTitle = document.getElementById("fiTitle");
 
     if (floorInfoEl) floorInfoEl.classList.add("visible");
     if (fiTitle) fiTitle.textContent = "Earth Positive Flagship";
     if (fiDesc) fiDesc.textContent = "Explore our luxury collections";
+
+    updateHotspotsVisibility(0);
 
     gsap.from(camera.position, {
       z: 50,
@@ -1697,6 +1935,7 @@ THREE.DefaultLoadingManager.onLoad = () => {
 };
 
 // Fallback safety boot loader trigger
+// Fallback safety boot loader trigger
 setTimeout(() => {
   const loadingScreen = document.getElementById("loading");
   if (loadingScreen && !loadingScreen.classList.contains("hidden")) {
@@ -1705,6 +1944,8 @@ setTimeout(() => {
 
     const floorInfoEl = document.getElementById("floor-info");
     if (floorInfoEl) floorInfoEl.classList.add("visible");
+
+    updateHotspotsVisibility(0);
 
     gsap.from(camera.position, {
       z: 50,
