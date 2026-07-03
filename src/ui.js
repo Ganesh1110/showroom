@@ -160,3 +160,35 @@ export function updateProductPanelIcon(iconKey) {
     container.innerHTML = SVG_ICONS[iconKey] || '';
   }
 }
+
+export function populateColorSwatches(colors, onColorSelected) {
+  const container = document.getElementById('product-panel-colors');
+  const section = document.getElementById('product-panel-colors-section');
+  if (!container || !section) return;
+
+  container.innerHTML = '';
+  if (!colors || colors.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+
+  colors.forEach((color, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch-btn';
+    if (idx === 0) btn.classList.add('active');
+    btn.style.backgroundColor = color.hex;
+    btn.title = color.name || color.hex;
+    btn.ariaLabel = `Change color to ${color.name || color.hex}`;
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.color-swatch-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (onColorSelected) {
+        onColorSelected(color.hex);
+      }
+    });
+    container.appendChild(btn);
+  });
+}

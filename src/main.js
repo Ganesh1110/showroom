@@ -10,6 +10,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { FontLoader } from "three/addons/loaders/FontLoader.js";
 import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+import { VRButton } from "three/addons/webxr/VRButton.js";
 import gsap from "gsap";
 
 import {
@@ -49,6 +50,7 @@ import {
   initTutorialBindings,
   initAccessibilityKeyboardRouter,
   updateProductPanelIcon,
+  populateColorSwatches,
 } from "./ui.js";
 
 // ─────────────────────────────────────────────────
@@ -82,7 +84,15 @@ renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.xr.enabled = true;
 document.body.prepend(renderer.domElement);
+
+const vrButton = VRButton.createButton(renderer);
+vrButton.style.borderRadius = "2px";
+vrButton.style.border = "1px solid rgba(201,168,76,0.3)";
+vrButton.style.background = "rgba(10,10,12,0.92)";
+vrButton.style.color = "#D4AF37";
+document.body.appendChild(vrButton);
 
 const labelRenderer = new CSS2DRenderer();
 labelRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -1121,6 +1131,38 @@ function updateFloorVisibility(floorIndex) {
   }
 }
 
+// Helper to change material color of a product's clothing/fabric meshes dynamically
+function changeProductColor(productName, hexColor) {
+  const color = new THREE.Color(hexColor);
+  scene.traverse((child) => {
+    if (child.isMesh && child.userData && child.userData.productName === productName) {
+      const mat = child.material;
+      if (!mat) return;
+
+      // Skip structural materials
+      if (
+        mat === MAT.conc ||
+        mat === MAT.concDark ||
+        mat === MAT.steel ||
+        mat === MAT.steelDark ||
+        mat === MAT.glass ||
+        mat === MAT.glassTinted ||
+        mat === MAT.gold ||
+        (mat.metalness === 1.0 && mat.roughness === 0.0) // mirror
+      ) {
+        return;
+      }
+
+      // Clone material to make it unique for this mesh
+      if (!child.userData.hasClonedMaterial) {
+        child.material = mat.clone();
+        child.userData.hasClonedMaterial = true;
+      }
+      child.material.color.copy(color);
+    }
+  });
+}
+
 // ─────────────────────────────────────────────────
 //  HOTSPOT BUILDER METHODS
 // ─────────────────────────────────────────────────
@@ -1148,6 +1190,10 @@ function makePropHotspot(name, desc, x, y, z) {
     document.getElementById("prod-desc").textContent = details.desc;
 
     updateProductPanelIcon(details.icon);
+
+    populateColorSwatches(details.colors, (hex) => {
+      changeProductColor(name, hex);
+    });
 
     const panel = document.getElementById("product-panel");
     if (panel) {
@@ -1728,6 +1774,75 @@ window.addEventListener("touchmove", (event) => {
   }
 });
 
+// Detect clicks for Floor-Click navigation
+let pointerDownTime = 0;
+window.addEventListener("pointerdown", (event) => {
+  pointerDownTime = Date.now();
+});
+
+window.addEventListener("pointerup", (event) => {
+  // Only trigger if it was a quick click/tap (not a camera orbit drag)
+  if (Date.now() - pointerDownTime > 250) return;
+
+  // Make sure we are inside the showroom and not currently animating
+  if (!isInside || animating) return;
+
+  // Calculate mouse position relative to the screen
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // Intersect structural components in the building
+  const intersects = raycaster.intersectObjects(building.children, true);
+  
+  let clickedFloorSlab = null;
+  for (let i = 0; i < intersects.length; i++) {
+    const obj = intersects[i].object;
+    if (
+      obj.isMesh &&
+      (obj.name.includes("slab") || obj.name.includes("floor") || obj.material === MAT.conc || obj.material === MAT.concDark)
+    ) {
+      clickedFloorSlab = intersects[i];
+      break;
+    }
+  }
+
+  if (clickedFloorSlab) {
+    const point = clickedFloorSlab.point;
+    const targetY = currentInteriorFloor * FLOOR_H;
+
+    animating = true;
+    controls.enabled = false;
+
+    // Glide OrbitControls target horizontally to click position
+    gsap.to(controls.target, {
+      x: point.x,
+      y: targetY + 0.5,
+      z: point.z,
+      duration: 1.2,
+      ease: "power2.out",
+      onUpdate: () => controls.update()
+    });
+
+    // Glide camera horizontally relative to target to maintain relative viewport offset
+    const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+    
+    gsap.to(camera.position, {
+      x: point.x + offset.x,
+      y: targetY + FLOOR_H * 0.55, // Maintain stable eye-level height
+      z: point.z + offset.z,
+      duration: 1.2,
+      ease: "power2.out",
+      onUpdate: () => controls.update(),
+      onComplete: () => {
+        controls.enabled = true;
+        animating = false;
+      }
+    });
+  }
+});
+
 function checkRaycast() {
   if (!isInside || animating) {
     document.body.style.cursor = "default";
@@ -1811,8 +1926,6 @@ if (btnDown) {
 // ─────────────────────────────────────────────────
 const clock = new THREE.Clock();
 function animate() {
-  requestAnimationFrame(animate);
-
   const t = clock.getElapsedTime();
 
   // Breathe interior lights
@@ -1870,7 +1983,7 @@ function applyCollisionDetection() {
   );
 }
 
-animate();
+renderer.setAnimationLoop(animate);
 
 // ─────────────────────────────────────────────────
 //  RESIZE

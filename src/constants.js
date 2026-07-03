@@ -66,6 +66,12 @@ export const PROP_DATABASE = {
     price: "$1,250.00",
     icon: "gown",
     desc: "A gorgeous ruffled rainbow gown hand-layered with fine sustainable colored tulle.",
+    colors: [
+      { name: "Rainbow Pink", hex: "#e53935" },
+      { name: "Neon Green", hex: "#39e535" },
+      { name: "Royal Blue", hex: "#3539e5" },
+      { name: "Midnight Black", hex: "#111111" },
+    ],
   },
   "Hirume Bonsai": {
     price: "$350.00",
@@ -86,6 +92,12 @@ export const PROP_DATABASE = {
     price: "$45.00",
     icon: "shirt",
     desc: "Classic graphic T-shirt collection made from organic, climate-neutral cotton.",
+    colors: [
+      { name: "White", hex: "#ffffff" },
+      { name: "Charcoal", hex: "#333333" },
+      { name: "Dusty Blue", hex: "#7a95b8" },
+      { name: "Sage Green", hex: "#7ba082" },
+    ],
   },
   "Organizer Stand": {
     price: "$180.00",
@@ -96,10 +108,21 @@ export const PROP_DATABASE = {
     price: "$95.00",
     icon: "hoodie",
     desc: "Heavyweight organic cotton hoodies and jackets with a comfortable relaxed fit.",
+    colors: [
+      { name: "Terracotta", hex: "#c85a32" },
+      { name: "Mustard", hex: "#d8a032" },
+      { name: "Lavender", hex: "#9586b8" },
+      { name: "Slate Grey", hex: "#5a6268" },
+    ],
   },
   "Accessories Collection": {
     price: "$65.00",
     icon: "cap",
     desc: "Premium sustainable baseball caps, tote bags, and everyday accessories.",
+    colors: [
+      { name: "Black", hex: "#222222" },
+      { name: "Off-White", hex: "#eae5e0" },
+      { name: "Olive", hex: "#556b2f" },
+    ],
   },
 };
