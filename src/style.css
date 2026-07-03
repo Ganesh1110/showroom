@@ -839,8 +839,11 @@ canvas { display: block; }
     overflow-y: auto;
   }
   #product-panel.product-panel-hidden {
-    transform: translateY(100%);
+    transform: translateY(100%) !important;
     opacity: 1;
+  }
+  #product-panel:not(.product-panel-hidden) {
+    transform: translateY(0) !important;
   }
 }
 
