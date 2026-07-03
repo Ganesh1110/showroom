@@ -57,6 +57,8 @@ import {
 let isInside = false;
 let currentInteriorFloor = 0;
 let animating = false;
+const currentHour = new Date().getHours();
+let isNight = currentHour >= 18 || currentHour < 6;
 
 const prefersReducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)",
@@ -76,7 +78,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.8;
+renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -92,7 +94,7 @@ document.body.prepend(labelRenderer.domElement);
 //  SCENE & BACKGROUND
 // ─────────────────────────────────────────────────
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0a18, 0.006);
+scene.fog = new THREE.FogExp2(0x0a0a18, isNight ? 0.012 : 0.006);
 
 scene.background = new THREE.Color(0x0a0a18);
 
@@ -125,12 +127,12 @@ const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
 const isMobileDevice = window.innerWidth <= 768 || "ontouchstart" in window;
-const initialBloomStrength = isMobileDevice ? 0.15 : 0.65;
+const initialBloomStrength = isMobileDevice ? 0.05 : 0.2;
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   initialBloomStrength,
-  isMobileDevice ? 0.1 : 0.4,
-  0.65,
+  0.2, // radius
+  0.9, // threshold (only let highly emissive objects glow)
 );
 composer.addPass(bloomPass);
 
@@ -140,13 +142,23 @@ composer.addPass(outputPass);
 // ─────────────────────────────────────────────────
 //  LIGHTS
 // ─────────────────────────────────────────────────
-const ambientLight = new THREE.AmbientLight(0x1a1a2e, 0.6);
+const ambientLight = new THREE.AmbientLight(
+  isNight ? 0x0a0a20 : 0x1a1a2e,
+  isNight ? 0.15 : 0.6
+);
+if (isNight) {
+  ambientLight.color.setRGB(0.35, 0.45, 0.75);
+}
 scene.add(ambientLight);
 
-const hemiLight = new THREE.HemisphereLight(0x3a4a6a, 0x111118, 0.5);
+const hemiLight = new THREE.HemisphereLight(
+  isNight ? 0x111122 : 0x3a4a6a,
+  0x111118,
+  isNight ? 0.2 : 0.5
+);
 scene.add(hemiLight);
 
-const keyLight = new THREE.DirectionalLight(0xfff0e8, 2.0);
+const keyLight = new THREE.DirectionalLight(0xfff0e8, isNight ? 0.4 : 1.2);
 keyLight.position.set(18, 28, 16);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(4096, 4096);
@@ -158,7 +170,7 @@ keyLight.shadow.camera.top = 30;
 keyLight.shadow.camera.bottom = -30;
 scene.add(keyLight);
 
-const rimLight = new THREE.DirectionalLight(0xffeedd, 0.5);
+const rimLight = new THREE.DirectionalLight(0xffeedd, isNight ? 0.15 : 0.5);
 rimLight.position.set(-10, 6, 22);
 scene.add(rimLight);
 
@@ -1595,7 +1607,7 @@ if (bloomToggleBtn) {
       if (bloomText) bloomText.textContent = "BLOOM OFF";
       showToast("Bloom disabled (high performance)");
     } else {
-      bloomPass.strength = isMobileDevice ? 0.15 : 0.65;
+      bloomPass.strength = isMobileDevice ? 0.05 : 0.2;
       if (bloomIcon) bloomIcon.textContent = "⚡";
       if (bloomText) bloomText.textContent = "BLOOM ON";
       showToast("Bloom enabled (cinematic quality)");
@@ -1606,12 +1618,17 @@ if (bloomToggleBtn) {
 // ─────────────────────────────────────────────────
 //  🌓 DAY/NIGHT LIGHTING MODE TOGGLE
 // ─────────────────────────────────────────────────
-let isNight = false;
+//  🌓 DAY/NIGHT LIGHTING MODE TOGGLE
+// ─────────────────────────────────────────────────
 const dnToggle = document.getElementById("daynight-toggle");
 const dnIcon = document.getElementById("daynight-icon");
 const dnText = document.getElementById("daynight-text");
 
 if (dnToggle) {
+  // Sync button text and icon with initial system time state
+  if (dnIcon) dnIcon.textContent = isNight ? "☀️" : "🌙";
+  if (dnText) dnText.textContent = isNight ? "DAY MODE" : "NIGHT MODE";
+
   dnToggle.addEventListener("click", (e) => {
     e.stopPropagation();
     isNight = !isNight;
@@ -1631,7 +1648,7 @@ if (dnToggle) {
       ease: "power2.out",
     });
     gsap.to(keyLight, {
-      intensity: isNight ? 0.4 : 2.0,
+      intensity: isNight ? 0.4 : 1.2,
       duration: 1.5,
       ease: "power2.out",
     });
